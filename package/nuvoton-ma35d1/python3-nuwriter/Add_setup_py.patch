@@ -1,0 +1,41 @@
+diff --git a/nuwriter.py b/nuwriter.py
+index d474897..0ef7e43 100644
+--- a/nuwriter.py
++++ b/nuwriter.py
+@@ -1,3 +1,5 @@
++#!/usr/bin/env python
++
+ # NOTE: This script is test under Python 3.x
+ 
+ __copyright__ = "Copyright (C) 2020~2021 Nuvoton Technology Corp. All rights reserved"
+diff --git a/setup.py b/setup.py
+new file mode 100644
+index 0000000..ff9d9a0
+--- /dev/null
++++ b/setup.py
+@@ -0,0 +1,25 @@
++from setuptools import setup, find_packages
++
++setup(
++      name="nuwriter",
++      version="1.0",
++      description="Nuvoton ma35d1 nuwriter tool",
++      author="Nuvoton",
++      url="http://www.nuvoton.com",
++      license="LGPL",
++      python_requires='>=3',
++      packages= find_packages(),
++      install_requires=[
++          'pyusb',
++          'usb',
++          'crypto',
++          'ecdsa',
++          'crcmod',
++          'tqdm',
++          'pycryptodome',
++      ],
++
++      data_files=[('share/nuwriter/ddrimg/', ['ddrimg/MA35D1xx7.bin','ddrimg/MA35D1xx8.bin']),
++      		('bin/',['xusb.bin'])],
++      scripts=["nuwriter.py","xusbcom.py","UnpackImage.py"],
++      )

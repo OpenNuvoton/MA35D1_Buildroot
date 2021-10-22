@@ -1,5 +1,5 @@
 menu "Host utilities"
-
+	source "package/nuvoton-ma35d1/Config.in.host"
 	source "package/abootimg/Config.in.host"
 	source "package/aespipe/Config.in.host"
 	source "package/android-tools/Config.in.host"

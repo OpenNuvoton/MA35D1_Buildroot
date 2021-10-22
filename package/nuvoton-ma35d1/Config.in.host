@@ -1,0 +1,12 @@
+menuconfig BR2_PACKAGE_NUVOTON_MA35D1
+	bool "host nuvoton-ma35d1 libraries"
+	depends on BR2_arm || BR2_aarch64
+	help
+	  Those packages provide some hardware tools for Nutoton 
+	  MA35D1 platforms.
+
+if BR2_PACKAGE_NUVOTON_MA35D1
+
+source "package/nuvoton-ma35d1/python3-nuwriter/Config.in.host"
+
+endif

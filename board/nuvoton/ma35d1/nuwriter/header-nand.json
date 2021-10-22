@@ -1,0 +1,47 @@
+{
+    "header":
+    {
+        "version": "0x20210119",
+        "spiinfo":
+        {
+            "pagesize": "2048",
+            "sparearea": "64",
+            "pageperblk": "64",
+            "quadread": "0x6B",
+            "readsts": "0x05",
+            "writests": "0x01",
+            "stsvalue": "0x02",
+            "dummy1": "0",
+            "dummy2": "1",
+            "suspintvl": "1"
+        },
+        "secureboot": "no",
+        "entrypoint": "0x28000000",
+        "aeskey" : "5E76953BF598581F925B7995157844747FABE669ABF000345E0EE21B63624D59",
+        "ecdsakey": "5E76953BF598581F925B7995157844747FABE669ABF000345E0EE21B63624D59",
+        "image":
+        [
+            {
+              "offset": "0xA0000",
+              "loadaddr": "0x28030000",
+              "type": "2",
+              "file": "ddrimg_tfa.bin"
+            },
+            {
+              "offset": "0xC0000",
+              "loadaddr": "0x28023000",
+              "type": "3",
+              "file": "bl2.dtb"
+            },
+            {
+              "offset": "0xE0000",
+              "loadaddr": "0x28000000",
+              "type": "4",
+              "file": "bl2.bin"
+            }
+        ]
+    }
+}
+
+
+

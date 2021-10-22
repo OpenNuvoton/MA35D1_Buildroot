@@ -31,10 +31,33 @@ ifeq ($(BR2_PACKAGE_LIBICONV),y)
 PARTED_DEPENDENCIES += libiconv
 endif
 
-HOST_PARTED_DEPENDENCIES = host-pkgconf host-util-linux
-HOST_PARTED_CONF_OPTS += \
-	--without-readline \
-	--disable-device-mapper
+HOST_PARTED_DEPENDENCIES = host-pkgconf host-util-linux host-python3-pip host-python3-nuwriter
+HOST_PARTED_CONF_OPTS = \
+	--disable-silent-rules \
+	--disable-dependency-tracking \
+	--disable-device-mapper \
+	--disable-nls \
+	--without-readline
+
+define HOST_PARTED_CONFIGURE_CMDS
+	(cd $(@D); rm -rf config.cache; \
+		$(HOST_CONFIGURE_ARGS) \
+		$(HOST_CONFIGURE_OPTS) \
+		./configure \
+		--prefix="$(HOST_DIR)" \
+		$(HOST_PARTED_CONF_OPTS) \
+	)
+endef
+
+
+define HOST_PARTED_BUILD_CMDS
+	$(HOST_MAKE_ENV) $(MAKE1) -C $(@D)
+endef
+
+define HOST_PARTED_INSTALL_CMDS
+	$(HOST_MAKE_ENV) $(MAKE1) -C $(@D) install
+endef
+
 
 $(eval $(autotools-package))
-$(eval $(host-autotools-package))
+$(eval $(host-generic-package))

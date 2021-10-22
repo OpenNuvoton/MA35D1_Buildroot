@@ -122,6 +122,11 @@ config BR2_TARGET_UBOOT_BOARD_DEFCONFIG
 	help
 	  Name of the board for which U-Boot should be built, without
 	  the _defconfig suffix.
+	  ma35d1 u-boot defconfig supports the follwing:
+	      ma35d1_sdcard0
+	      ma35d1_sdcard1
+	      ma35d1_spinand
+	      ma35d1_nand
 
 config BR2_TARGET_UBOOT_CUSTOM_CONFIG_FILE
 	string "Configuration file path"
