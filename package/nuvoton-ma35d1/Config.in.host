@@ -6,7 +6,8 @@ menuconfig BR2_PACKAGE_NUVOTON_MA35D1
 	  MA35D1 platforms.
 
 if BR2_PACKAGE_NUVOTON_MA35D1
-
 source "package/nuvoton-ma35d1/python3-nuwriter/Config.in.host"
-
+source "package/nuvoton-ma35d1/m4-bsp/Config.in.host"
+source "package/nuvoton-ma35d1/gcc-arm-none-eabi/Config.in.host"
+source "package/nuvoton-ma35d1/nu-eclipse/Config.in.host"
 endif

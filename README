@@ -24,8 +24,11 @@ Buildroot comes with a basic configuration for a number of boards. Run
 The following boards were test in this release:
 
 	- nuvoton_ma35d1_evb_defconfig
+	- nuvoton_ma35d1_evb_security_defconfig
 	- nuvoton_ma35d1_iot_defconfig
+	- nuvoton_ma35d1_iot_security_defconfig
 	- nuvoton_ma35d1_som_defconfig
+	- nuvoton_ma35d1_som_security_defconfig
 
 After the complilatiobn is complete, you can get the complete image in
 "output/images" folder
@@ -36,6 +39,7 @@ do the following:
 2) run 'make menuconfig'
 3) modify 'Bootloaders ---> Board defconfig' to 'ma35d1_sdcard0' or 'ma35d1_sdcard1'
 4) run 'make arm-trusted-firmware-dirclean uboot-dirclean linux-dirclean'
+        if you use optee-os, you need to run 'make optee-os-dirclean'
 5) run 'make'
 6) wait while it compiles
 7) find pack-core-image-buildroot-ma35d1-evb-sdcard.bin and
@@ -52,6 +56,7 @@ do the following:
 2) run 'make menuconfig'
 3) modify 'Bootloaders ---> Board defconfig' to 'ma35d1_spinand'
 4) run 'make arm-trusted-firmware-dirclean uboot-dirclean linux-dirclean'
+        if you use optee-os, you need to run 'make optee-os-dirclean'
 5) run 'make'
 6) wait while it compiles
 7) find pack-core-image-buildroot-ma35d1-evb-spinand.bin in output/images

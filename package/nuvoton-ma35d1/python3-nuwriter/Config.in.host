@@ -1,6 +1,6 @@
-config BR2_PACKAGE_PYTHON3_NUWRITER
-        bool "host ma35d1-nuwriter"
-	depends on BR2_PACKAGE_PYTHON3
-        help
-          nuwriter tool
+config BR2_PACKAGE_HOST_PYTHON3_NUWRITER
+	bool "host ma35d1-nuwriter"
+	depends on BR2_PACKAGE_HOST_PYTHON3
+	help
+	  nuwriter tool
 

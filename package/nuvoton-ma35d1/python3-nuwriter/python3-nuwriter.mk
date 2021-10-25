@@ -21,5 +21,10 @@ define HOST_PYTHON3_NUWRITER_BUILD_CMDS
 	)
 endef
 
-$(eval $(host-python-package))
+define HOST_PYTHON3_NUWRITER_INSTALL_CMDS
+	(cd $(@D); \
+		$(HOST_DIR)/bin/pip3 install ./ \
+	)
+endef
 
+$(eval $(host-generic-package))

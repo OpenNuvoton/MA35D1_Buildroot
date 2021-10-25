@@ -31,7 +31,7 @@ ifeq ($(BR2_PACKAGE_LIBICONV),y)
 PARTED_DEPENDENCIES += libiconv
 endif
 
-HOST_PARTED_DEPENDENCIES = host-pkgconf host-util-linux host-python3-pip host-python3-nuwriter
+HOST_PARTED_DEPENDENCIES = host-pkgconf host-util-linux
 HOST_PARTED_CONF_OPTS = \
 	--disable-silent-rules \
 	--disable-dependency-tracking \
