@@ -4,7 +4,6 @@ MODULES_DIR=board/nuvoton/ma35d1/modules
 MODULES_TDIR=$TARGET_DIR/lib/modules/5.4.110
 GFXDRIVERS_TDIR=$TARGET_DIR/usr/lib/directfb-1.7-7/gfxdrivers
 
-#if [[ $(echo ${BR2_CONFIG} | grep "BR2_PACKAGE_BUSYBOX=y") != "" ]]
 if grep -Eq "^BR2_PACKAGE_BUSYBOX=y$" ${BR2_CONFIG}; then
 	install -d -m 755 ${MODULES_TARGET_DIR}
 	install -d -m 755 ${GFXDRIVERS_TDIR}

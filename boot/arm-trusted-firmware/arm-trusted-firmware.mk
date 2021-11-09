@@ -164,6 +164,9 @@ define ARM_TRUSTED_FIRMWARE_BL2_DTB_INSTALL
 	elif [ "nuvoton/ma35d1-som" = "$(BR2_LINUX_KERNEL_INTREE_DTS_NAME)" ]; then  \
 		$(INSTALL) -D -m 0644 $(ARM_TRUSTED_FIRMWARE_IMG_DIR)/fdts/ma35d1xx0.dtb \
 			$(BINARIES_DIR)/bl2.dtb; \
+	elif [ "nuvoton/ma35d1-som-1gb" = "$(BR2_LINUX_KERNEL_INTREE_DTS_NAME)" ]; then  \
+		$(INSTALL) -D -m 0644 $(ARM_TRUSTED_FIRMWARE_IMG_DIR)/fdts/ma35d1xx0-mt-1gb.dtb \
+			$(BINARIES_DIR)/bl2.dtb; \
 	fi
 endef
 endif

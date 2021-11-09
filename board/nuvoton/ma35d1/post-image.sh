@@ -152,11 +152,11 @@ IMAGE_CMD_sdcard()
         # 0x30000
         dd if=${BINARIES_DIR}/bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
         # 0x40000
-        dd if=${BINARIES_DIR}/uboot-env.bin of=${SDCARD} conv=notrunc seek=512 bs=512 &>${NULLDEV}
+        dd if=${BINARIES_DIR}/uboot-env.bin-sdcard of=${SDCARD} conv=notrunc seek=512 bs=512 &>${NULLDEV}
         # 0xC0000
-        dd if=${BINARIES_DIR}/fip.bin of=${SDCARD} conv=notrunc seek=1536 bs=512 &>${NULLDEV}
+        dd if=${BINARIES_DIR}/fip.bin-sdcard of=${SDCARD} conv=notrunc seek=1536 bs=512 &>${NULLDEV}
         # 0x2c0000
-        dd if=${BINARIES_DIR}/ma35d1-evb.dtb of=${SDCARD} conv=notrunc seek=5632 bs=512 &>${NULLDEV}
+        dd if=${BINARIES_DIR}/${MACHINE}.dtb of=${SDCARD} conv=notrunc seek=5632 bs=512 &>${NULLDEV}
         # 0x300000
         dd if=${BINARIES_DIR}/Image of=${SDCARD} conv=notrunc seek=6144 bs=512 &>${NULLDEV}
         # root fs
@@ -180,12 +180,20 @@ uboot_cmd() {
 		then
 			sed -i "s/kernelmem=128M/kernelmem=120M/1" ${BINARIES_DIR}/uboot-env.txt
 		fi
+		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
 	elif  [[ $MACHINE == "${PROJECT}-som" ]]
 	then
 		sed -i "s/kernelmem=256M/kernelmem=512M/1" ${BINARIES_DIR}/uboot-env.txt
 		if [[ $IS_OPTEE == "yes" ]]
 		then
 			sed -i "s/kernelmem=512M/kernelmem=504M/1" ${BINARIES_DIR}/uboot-env.txt
+		fi
+	elif  [[ $MACHINE == "${PROJECT}-som-1gb" ]]
+	then
+		sed -i "s/kernelmem=256M/kernelmem=1024M/1" ${BINARIES_DIR}/uboot-env.txt
+		if [[ $IS_OPTEE == "yes" ]]
+		then
+			sed -i "s/kernelmem=1024M/kernelmem=1016M/1" ${BINARIES_DIR}/uboot-env.txt
 		fi
 	fi
 	
