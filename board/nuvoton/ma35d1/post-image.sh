@@ -123,7 +123,7 @@ IMAGE_CMD_sdcard()
 
         # MBR table for nuwriter
 	dd if=/dev/zero of=${BINARIES_DIR}/MBR.scdard.bin bs=1 count=0 seek=512 &>${NULLDEV}
-	dd if=${SDCARD} of=${BINARIES_DIR}/MBR.scdard.bin conv=notrunc seek=0 count=1 bs=512 &>${NULLDEV}
+	dd if=${SDCARD} of=${BINARIES_DIR}/MBR.scdard.bin conv=notrunc,fsync seek=0 count=1 bs=512 &>${NULLDEV}
 
 	( \
 		cd ${BINARIES_DIR}; \
