@@ -29,6 +29,8 @@ The following boards were test in this release:
 	- nuvoton_ma35d1_iot_security_defconfig
 	- nuvoton_ma35d1_som_defconfig
 	- nuvoton_ma35d1_som_security_defconfig
+	- nuvoton_ma35d1_som_1gb_defconfig
+	- nuvoton_ma35d1_som_1gb_security_defconfig
 
 After the complilatiobn is complete, you can get the complete image in
 "output/images" folder
