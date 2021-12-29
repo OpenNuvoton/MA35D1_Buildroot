@@ -1,0 +1,149 @@
+diff --git a/src/plugins/platforms/linuxfb/qlinuxfbscreen.cpp b/src/plugins/platforms/linuxfb/qlinuxfbscreen.cpp
+index cb8962d4b8..2d8759b875 100644
+--- a/src/plugins/platforms/linuxfb/qlinuxfbscreen.cpp
++++ b/src/plugins/platforms/linuxfb/qlinuxfbscreen.cpp
+@@ -65,6 +65,7 @@
+ 
+ QT_BEGIN_NAMESPACE
+ 
++
+ static int openFramebufferDevice(const QString &dev)
+ {
+     int fd = -1;
+@@ -287,7 +288,7 @@ static void blankScreen(int fd, bool on)
+ }
+ 
+ QLinuxFbScreen::QLinuxFbScreen(const QStringList &args)
+-    : mArgs(args), mFbFd(-1), mTtyFd(-1), mBlitter(0)
++    : mArgs(args), mFbFd(-1), mTtyFd(-1), mFbScreenImageIdx(0)
+ {
+     mMmap.data = 0;
+ }
+@@ -302,8 +303,6 @@ QLinuxFbScreen::~QLinuxFbScreen()
+ 
+     if (mTtyFd != -1)
+         resetTty(mTtyFd, mOldTtyMode);
+-
+-    delete mBlitter;
+ }
+ 
+ bool QLinuxFbScreen::initialize()
+@@ -355,7 +354,6 @@ bool QLinuxFbScreen::initialize()
+ 
+     // Read the fixed and variable screen information
+     fb_fix_screeninfo finfo;
+-    fb_var_screeninfo vinfo;
+     memset(&vinfo, 0, sizeof(vinfo));
+     memset(&finfo, 0, sizeof(finfo));
+ 
+@@ -388,7 +386,8 @@ bool QLinuxFbScreen::initialize()
+     mMmap.data = data + mMmap.offset;
+ 
+     QFbScreen::initializeCompositor();
+-    mFbScreenImage = QImage(mMmap.data, geometry.width(), geometry.height(), mBytesPerLine, mFormat);
++    for(int i=0;i<BUFFER_COUNT;i++)
++      mFbScreenImage[i] = QImage(data+(mMmap.offset*i), geometry.width(), geometry.height(), mBytesPerLine, mFormat);
+ 
+     mCursor = new QFbCursor(this);
+ 
+@@ -409,12 +408,23 @@ QRegion QLinuxFbScreen::doRedraw()
+     if (touched.isEmpty())
+         return touched;
+ 
+-    if (!mBlitter)
+-        mBlitter = new QPainter(&mFbScreenImage);
++    for (int i = 0; i < BUFFER_COUNT; i++)
++        dirty[i] += touched;
++
++    if (mFbScreenImage[mFbScreenImageIdx].isNull())
++        return touched;
++
++    QPainter mBlitter(&mFbScreenImage[mFbScreenImageIdx]);
++    mBlitter.setCompositionMode(QPainter::CompositionMode_Source);
++    for (const QRect &rect : qAsConst(dirty[mFbScreenImageIdx]))
++        mBlitter.drawImage(rect, mScreenImage, rect);
++    mBlitter.end();
+ 
+-    mBlitter->setCompositionMode(QPainter::CompositionMode_Source);
+-    for (const QRect &rect : touched)
+-        mBlitter->drawImage(rect, mScreenImage, rect);
++    vinfo.yoffset = vinfo.yres*mFbScreenImageIdx;
++    dirty[mFbScreenImageIdx] = QRegion();
++    mFbScreenImageIdx=(mFbScreenImageIdx+1)%BUFFER_COUNT;
++
++    ioctl( mFbFd, FBIOPAN_DISPLAY, vinfo );
+ 
+     return touched;
+ }
+@@ -423,25 +433,11 @@ QRegion QLinuxFbScreen::doRedraw()
+ // In linuxfb's case it will also include the mouse cursor.
+ QPixmap QLinuxFbScreen::grabWindow(WId wid, int x, int y, int width, int height) const
+ {
+-    if (!wid) {
+-        if (width < 0)
+-            width = mFbScreenImage.width() - x;
+-        if (height < 0)
+-            height = mFbScreenImage.height() - y;
+-        return QPixmap::fromImage(mFbScreenImage).copy(x, y, width, height);
+-    }
+-
+-    QFbWindow *window = windowForId(wid);
+-    if (window) {
+-        const QRect geom = window->geometry();
+-        if (width < 0)
+-            width = geom.width() - x;
+-        if (height < 0)
+-            height = geom.height() - y;
+-        QRect rect(geom.topLeft() + QPoint(x, y), QSize(width, height));
+-        rect &= window->geometry();
+-        return QPixmap::fromImage(mFbScreenImage).copy(rect);
+-    }
++    Q_UNUSED(wid);
++    Q_UNUSED(x);
++    Q_UNUSED(y);
++    Q_UNUSED(width);
++    Q_UNUSED(height);
+ 
+     return QPixmap();
+ }
+diff --git a/src/plugins/platforms/linuxfb/qlinuxfbscreen.h b/src/plugins/platforms/linuxfb/qlinuxfbscreen.h
+index c7ce455e6a..e5a6575dff 100644
+--- a/src/plugins/platforms/linuxfb/qlinuxfbscreen.h
++++ b/src/plugins/platforms/linuxfb/qlinuxfbscreen.h
+@@ -41,12 +41,16 @@
+ #define QLINUXFBSCREEN_H
+ 
+ #include <QtFbSupport/private/qfbscreen_p.h>
++#include <linux/fb.h>
+ 
+ QT_BEGIN_NAMESPACE
+ 
+ class QPainter;
+ class QFbCursor;
+ 
++static const int BUFFER_COUNT = 2;
++
++
+ class QLinuxFbScreen : public QFbScreen
+ {
+     Q_OBJECT
+@@ -65,7 +69,9 @@ private:
+     int mFbFd;
+     int mTtyFd;
+ 
+-    QImage mFbScreenImage;
++    QImage mFbScreenImage[BUFFER_COUNT];
++    QRegion dirty[BUFFER_COUNT];
++    int mFbScreenImageIdx;
+     int mBytesPerLine;
+     int mOldTtyMode;
+ 
+@@ -74,7 +80,7 @@ private:
+         int offset, size;
+     } mMmap;
+ 
+-    QPainter *mBlitter;
++    fb_var_screeninfo vinfo;
+ };
+ 
+ QT_END_NAMESPACE
