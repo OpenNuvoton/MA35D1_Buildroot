@@ -9,6 +9,14 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE
 	  https://github.com/ARM-software/arm-trusted-firmware
 
 if BR2_TARGET_ARM_TRUSTED_FIRMWARE
+
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
+	string "In-tree Device Tree Source file names"
+	help
+	  Name of in-tree device tree source file, without
+	  the trailing .dts. You can provide a list of
+	  dts files to build, separated by spaces.
+
 choice
 	prompt "ATF Version"
 	help
