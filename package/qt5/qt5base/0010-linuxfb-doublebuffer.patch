@@ -42,7 +42,7 @@ index cb8962d4b8..2d8759b875 100644
      QFbScreen::initializeCompositor();
 -    mFbScreenImage = QImage(mMmap.data, geometry.width(), geometry.height(), mBytesPerLine, mFormat);
 +    for(int i=0;i<BUFFER_COUNT;i++)
-+      mFbScreenImage[i] = QImage(data+(mMmap.offset*i), geometry.width(), geometry.height(), mBytesPerLine, mFormat);
++      mFbScreenImage[i] = QImage(data+(vinfo.yres*mBytesPerLine*i), geometry.width(), geometry.height(), mBytesPerLine, mFormat);
  
      mCursor = new QFbCursor(this);
  
