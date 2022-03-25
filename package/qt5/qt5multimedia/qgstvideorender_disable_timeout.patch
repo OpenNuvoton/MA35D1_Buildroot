@@ -1,0 +1,13 @@
+diff --git a/src/gsttools/qgstvideorenderersink.cpp b/src/gsttools/qgstvideorenderersink.cpp
+index 3b458a978..fc53826cc 100644
+--- a/src/gsttools/qgstvideorenderersink.cpp
++++ b/src/gsttools/qgstvideorenderersink.cpp
+@@ -477,7 +477,7 @@ bool QVideoSurfaceGstDelegate::handleEvent(QMutexLocker *locker)
+     } else if (m_renderBuffer) {
+         GstBuffer *buffer = m_renderBuffer;
+         m_renderBuffer = 0;
+-        m_renderReturn = GST_FLOW_ERROR;
++        //m_renderReturn = GST_FLOW_ERROR;
+ 
+         if (m_activeRenderer && m_surface) {
+             gst_buffer_ref(buffer);
