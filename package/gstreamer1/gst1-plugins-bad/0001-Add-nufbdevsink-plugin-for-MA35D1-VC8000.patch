@@ -1,6 +1,6 @@
 diff -Naur gst-plugins-bad-1.18.5_orig/meson_options.txt gst-plugins-bad-1.18.5/meson_options.txt
 --- gst-plugins-bad-1.18.5_orig/meson_options.txt	2021-09-09 03:03:40.951254100 +0800
-+++ gst-plugins-bad-1.18.5/meson_options.txt	2022-02-17 15:49:08.631027646 +0800
++++ gst-plugins-bad-1.18.5/meson_options.txt	2022-03-25 13:49:03.953321183 +0800
 @@ -101,6 +101,7 @@
  option('faac', type : 'feature', value : 'auto', description : 'Free AAC audio encoder plugin')
  option('faad', type : 'feature', value : 'auto', description : 'Free AAC audio decoder plugin')
@@ -11,7 +11,7 @@ diff -Naur gst-plugins-bad-1.18.5_orig/meson_options.txt gst-plugins-bad-1.18.5/
  option('fluidsynth', type : 'feature', value : 'auto', description : 'Fluidsynth MIDI decoder plugin')
 diff -Naur gst-plugins-bad-1.18.5_orig/sys/meson.build gst-plugins-bad-1.18.5/sys/meson.build
 --- gst-plugins-bad-1.18.5_orig/sys/meson.build	2021-09-09 03:03:40.983253700 +0800
-+++ gst-plugins-bad-1.18.5/sys/meson.build	2022-02-17 15:49:08.631027646 +0800
++++ gst-plugins-bad-1.18.5/sys/meson.build	2022-03-25 13:49:03.953321183 +0800
 @@ -10,6 +10,7 @@
  #subdir('dshowvideosink')
  subdir('dvb')
@@ -22,8 +22,8 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/meson.build gst-plugins-bad-1.18.5/sy
  subdir('magicleap')
 diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c gst-plugins-bad-1.18.5/sys/nufbdev/gstnufbdevsink.c
 --- gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c	1970-01-01 08:00:00.000000000 +0800
-+++ gst-plugins-bad-1.18.5/sys/nufbdev/gstnufbdevsink.c	2022-02-16 12:05:05.447860000 +0800
-@@ -0,0 +1,645 @@
++++ gst-plugins-bad-1.18.5/sys/nufbdev/gstnufbdevsink.c	2022-03-25 13:49:56.681319214 +0800
+@@ -0,0 +1,720 @@
 +/* GStreamer
 + * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
 + * This file:
@@ -119,6 +119,8 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c gst-plugins-
 +#define DEFAULT_PROP_WIDTH 1024
 +#define DEFAULT_PROP_HEIGHT 600
 +#define DEFAULT_PROP_ROTATE 0
++#define DEFAULT_PROP_FBSEL 0
++#define DEFAULT_PROP_DCBLEND DC_BLEND_MODE_SRC_OVER
 +
 +enum
 +{
@@ -137,7 +139,9 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c gst-plugins-
 +  PROP_Y_POS,
 +  PROP_WIDTH,
 +  PROP_HEIGHT,
-+  PROP_ROTATE
++  PROP_ROTATE,
++  PROP_FBSEL,
++  PROP_DCBLEND,
 +};
 +
 +#define CSP_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
@@ -429,16 +433,130 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c gst-plugins-
 +          "Rotation of the VC8000 output image", 0, 3,
 +          DEFAULT_PROP_ROTATE,
 +          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
++  g_object_class_install_property (gobject_class, PROP_FBSEL,
++      g_param_spec_int ("fb", "fbSel",
++          "Select Frame Buffer fb0/fb1", 0, 3,
++          DEFAULT_PROP_FBSEL,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
++  g_object_class_install_property (gobject_class, PROP_DCBLEND,
++      g_param_spec_int ("dcb", "DCBlend",
++          "Select DCUltra alpha blending mode", 0, 7,
++          DEFAULT_PROP_DCBLEND,
++          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 +}
 +
-+static void
-+gst_nufbdevsink_init (nuGstVideoConvert * space)
++static int select_vc8k_pp_dst(nuGstVideoConvert *csp, int fbsel)
 +{
 +  struct vc8k_pp_params  *pp;
 +  char  dev_name[32];
 +  int   i;
 +
-+  printf("gst_nufbdevsink_init %s %s\n", __DATE__, __TIME__);
++  pp = &csp->pp;
++
++  if (csp->framebuffer != NULL) {   /* close the previous opened fb0/fbb1 */
++    munmap (csp->framebuffer, csp->fixinfo.smem_len);
++    close (csp->fd);
++    csp->framebuffer = NULL;
++    csp->fd = -1;
++  }
++
++  pp->pp_out_dst = fbsel;
++
++  if (pp->pp_out_dst == PP_DST_FB1)
++    csp->device = g_strdup ("/dev/fb1");
++  else
++    csp->device = g_strdup ("/dev/fb0");
++  
++  csp->fd = open (csp->device, O_RDWR);
++
++  if (csp->fd == -1) {
++    printf("nufbdevsink open %s failed!\n", csp->device);
++    return -1;
++  }
++    printf("nufbdevsink open %s.\n", csp->device);
++
++  /* get the fixed screen info */
++  if (ioctl (csp->fd, FBIOGET_FSCREENINFO, &csp->fixinfo)) {
++    close(csp->fd);
++    csp->fd = -1;
++    return -1;
++  }
++
++  /* get the variable screen info */
++  if (ioctl (csp->fd, FBIOGET_VSCREENINFO, &csp->varinfo)) {
++    close(csp->fd);
++    csp->fd = -1;
++    return -1;
++  }
++
++  if (pp->pp_out_dst == PP_DST_FB1) {
++     if (ioctl(csp->fd, ULTRAFBIO_BLENDING_MODE, &csp->dcblend) != 0)
++       printf("ULTRAFBIO_BLENDING_MODE %d failed!\n", csp->dcblend);
++     printf("Set alpha blending mode:  %d\n", csp->dcblend);
++  }
++
++  /* map the framebuffer */
++  csp->framebuffer = mmap (0, csp->fixinfo.smem_len,
++      PROT_WRITE, MAP_SHARED, csp->fd, 0);
++  if (csp->framebuffer == MAP_FAILED) {
++    csp->framebuffer = NULL;
++    printf("nufbdevsink frame buffer mmap error!\n");
++  }
++
++  ioctl(csp->fd, FBIOPAN_DISPLAY, &csp->varinfo);
++
++  /*-----------------------------------------------*/
++  /*  VC8000 PP control                            */
++  /*-----------------------------------------------*/
++  pp->enable_pp = 1;
++  pp->frame_buf_w = csp->varinfo.xres;
++  pp->frame_buf_h = csp->varinfo.yres;
++
++  if (csp->fd_vc8k != -1) {
++    if (ioctl(csp->fd_vc8k, VC8KIOC_PP_SET_CONFIG, csp->pp) != 0)
++      printf("VC8KIOC_PP_SET_CONFIG failed (%s)", strerror(errno));
++    return 0;
++  }
++
++  /*
++   * First itme to init VC8K
++   */
++  pp->img_out_x = 0;
++  pp->img_out_y = 0;
++  pp->img_out_w = csp->varinfo.xres;
++  pp->img_out_h = csp->varinfo.yres;
++  pp->rotation  = PP_ROTATION_NONE;
++
++  if (csp->format == GST_VIDEO_FORMAT_ARGB)
++    pp->img_out_fmt = V4L2_PIX_FMT_ARGB32;
++  else if (csp->format == GST_VIDEO_FORMAT_RGB16)
++    pp->img_out_fmt = V4L2_PIX_FMT_RGB565;
++  else
++    pp->img_out_fmt = V4L2_PIX_FMT_NV12;
++
++  for (i = 0; i < 10; i++) {
++    sprintf(dev_name, "/dev/video%d", i);
++    csp->fd_vc8k = open(dev_name, O_RDWR);
++    if (csp->fd_vc8k == -1)
++      continue;
++
++    if (ioctl(csp->fd_vc8k, VC8KIOC_PP_SET_CONFIG, csp->pp) != 0) {
++      printf("VC8KIOC_PP_SET_CONFIG failed (%s)", strerror(errno));
++      continue;
++    }
++    else
++      break;
++  }
++  if (i < 10) {
++    printf("VC8000 %s opened.\n", dev_name);
++    return -1;
++  }
++  return 0;
++  }
++
++static void
++gst_nufbdevsink_init (nuGstVideoConvert * space)
++{
 +  space->dither = DEFAULT_PROP_DITHER;
 +  space->dither_quantization = DEFAULT_PROP_DITHER_QUANTIZATION;
 +  space->chroma_resampler = DEFAULT_PROP_CHROMA_RESAMPLER;
@@ -450,73 +568,12 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c gst-plugins-
 +  space->primaries_mode = DEFAULT_PROP_PRIMARIES_MODE;
 +  space->n_threads = DEFAULT_PROP_N_THREADS;
 +
-+  if (!space->device) {
-+    space->device = g_strdup ("/dev/fb0");
-+  }
-+  space->fd = open (space->device, O_RDWR);
++  space->format = GST_VIDEO_FORMAT_ARGB;    /* hard fix to ARGB */
++  space->framebuffer = NULL;  /* to identify that fb0/fb1 was not ever been opened */
++  space->fd = -1;
++  space->fd_vc8k = -1;
++  select_vc8k_pp_dst(space, PP_DST_FB0);  /* default selest fb0, may be changed later in set_property */
 +
-+  if (space->fd == -1)
-+    return;
-+
-+  /* get the fixed screen info */
-+  if (ioctl (space->fd, FBIOGET_FSCREENINFO, &space->fixinfo)) {
-+    close(space->fd);
-+    return;
-+  }
-+
-+  /* get the variable screen info */
-+  if (ioctl (space->fd, FBIOGET_VSCREENINFO, &space->varinfo)) {
-+    close(space->fd);
-+    return;
-+  }
-+
-+  space->format = GST_VIDEO_FORMAT_ARGB;   /* hard fix to ARGB */
-+
-+  /* map the framebuffer */
-+  space->framebuffer = mmap (0, space->fixinfo.smem_len,
-+      PROT_WRITE, MAP_SHARED, space->fd, 0);
-+  if (space->framebuffer == MAP_FAILED)
-+    space->framebuffer = NULL;
-+
-+  ioctl(space->fd, FBIOPAN_DISPLAY, &space->varinfo);
-+
-+  /*-----------------------------------------------*/
-+  /*  VC8000 PP control                            */
-+  /*-----------------------------------------------*/
-+  pp = &space->pp;
-+  pp->enable_pp = 1;
-+  pp->frame_buf_w = space->varinfo.xres;
-+  pp->frame_buf_h = space->varinfo.yres;
-+  pp->img_out_x = 0;
-+  pp->img_out_y = 0;
-+  pp->img_out_w = space->varinfo.xres;
-+  pp->img_out_h = space->varinfo.yres;
-+  pp->rotation = PP_ROTATION_NONE;
-+
-+  if (space->format == GST_VIDEO_FORMAT_ARGB)
-+    pp->img_out_fmt = V4L2_PIX_FMT_ARGB32;
-+  else if (space->format == GST_VIDEO_FORMAT_RGB16)
-+    pp->img_out_fmt = V4L2_PIX_FMT_RGB565;
-+  else
-+    pp->img_out_fmt = V4L2_PIX_FMT_NV12;
-+
-+  for (i = 0; i < 10; i++) {
-+    sprintf(dev_name, "/dev/video%d", i);
-+    space->fd_vc8k = open(dev_name, O_RDWR);
-+    if (space->fd_vc8k == -1)
-+      continue;
-+
-+    if (ioctl(space->fd_vc8k, VC8KIOC_PP_SET_CONFIG, space->pp) != 0) {
-+      printf("VC8KIOC_PP_SET_CONFIG failed (%s)", strerror(errno));
-+      continue;
-+    }
-+    else
-+      break;
-+  }
-+  if (i < 10) {
-+    printf("VC8000 %s opened.\n", dev_name);
-+    return;
-+  }
 +  printf("%s %s - nufbdevsink\n", __DATE__, __TIME__);
 +}
 +
@@ -526,6 +583,7 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c gst-plugins-
 +{
 +  nuGstVideoConvert *csp;
 +  struct vc8k_pp_params  *pp;
++  struct _dc_overlay_rect  rect;
 +
 +  csp = GST_VIDEO_CONVERT (object);
 +  pp = &csp->pp;
@@ -562,30 +620,47 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c gst-plugins-
 +      csp->n_threads = g_value_get_uint (value);
 +      break;
 +    case PROP_X_POS:
-+      //printf("%s x-pos = %d\n", __func__, g_value_get_int (value));
 +      pp->img_out_x = g_value_get_int (value);
 +      break;
 +    case PROP_Y_POS:
-+      //printf("%s y-pos = %d\n", __func__, g_value_get_int (value));
 +      pp->img_out_y = g_value_get_int (value);
 +      break;
 +    case PROP_WIDTH:
-+      //printf("%s width = %d\n", __func__, g_value_get_int (value));
 +      pp->img_out_w = g_value_get_int (value);
 +      break;
 +    case PROP_HEIGHT:
-+      //printf("%s height = %d\n", __func__, g_value_get_int (value));
 +      pp->img_out_h = g_value_get_int (value);
 +      break;
 +    case PROP_ROTATE:
-+      //printf("%s rotate = %d\n", __func__, g_value_get_int (value));
 +      pp->rotation = g_value_get_int (value);
++      break;
++    case PROP_FBSEL:
++      select_vc8k_pp_dst(csp, g_value_get_int (value));
++      break;
++    case PROP_DCBLEND:
++      csp->dcblend = g_value_get_int (value);
 +      break;
 +    default:
 +      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 +      break;
 +  }
-+  ioctl(csp->fd_vc8k, VC8KIOC_PP_SET_CONFIG, csp->pp);
++
++#if 0
++  if (pp->pp_out_dst == PP_DST_FB1) {
++    rect.tlx = pp->img_out_x;
++    rect.tly = pp->img_out_y;
++    rect.brx = pp->img_out_x + pp->img_out_w;
++    rect.bry = pp->img_out_y + pp->img_out_h;
++    /* set fb1 overlay area */
++    if (ioctl (csp->fd, ULTRAFBIO_OVERLAY_RECT, &rect))
++      printf("ULTRAFBIO_OVERLAY_RECT failed (%s)", strerror(errno));
++    else
++      printf("ULTRAFBIO_OVERLAY_RECT - (%d,%d) - (%d,%d)\n", rect.tlx, rect.tly, rect.brx, rect.bry);
++  }
++#endif
++
++  if (ioctl(csp->fd_vc8k, VC8KIOC_PP_SET_CONFIG, csp->pp) != 0)
++    printf("VC8KIOC_PP_SET_CONFIG failed (%s)", strerror(errno));
 +}
 +
 +void
@@ -671,8 +746,8 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.c gst-plugins-
 +    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
 diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.h gst-plugins-bad-1.18.5/sys/nufbdev/gstnufbdevsink.h
 --- gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.h	1970-01-01 08:00:00.000000000 +0800
-+++ gst-plugins-bad-1.18.5/sys/nufbdev/gstnufbdevsink.h	2022-02-16 13:14:31.260071000 +0800
-@@ -0,0 +1,109 @@
++++ gst-plugins-bad-1.18.5/sys/nufbdev/gstnufbdevsink.h	2022-03-25 13:49:52.061319386 +0800
+@@ -0,0 +1,142 @@
 +/* GStreamer
 + * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
 + * This file:
@@ -709,7 +784,7 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.h gst-plugins-
 + */
 +struct vc8k_pp_params {
 +	int   enable_pp;
-+	void  *frame_buf_vaddr;          /* virtual address of frame buffer           */
++	int   frame_buf_paddr;           /* physical address of frame buffer          */
 +	int   frame_buff_size;
 +	int   frame_buf_w;               /* width of frame buffer width               */
 +	int   frame_buf_h;               /* height of frame buffer                    */
@@ -719,6 +794,12 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.h gst-plugins-
 +	int   img_out_h;                 /* image output height on frame buffer       */
 +	int   img_out_fmt;               /* image output format                       */
 +	int   rotation;
++	int   pp_out_dst;                /* PP output destination.                    */
++                                   /* 0: fb0                                    */
++                                   /* 1: fb1                                    */
++                                   /* otherwise: frame_buf_paddr                */
++  int   libjpeg_mode;              /* 0: v4l2-only; 1: libjpeg+v4l2             */
++	int   resserved[8];
 +};
 +
 +#define VC8KIOC_PP_SET_CONFIG	_IOW ('v', 91, struct vc8k_pp_params)
@@ -730,6 +811,32 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.h gst-plugins-
 +#define PP_ROTATION_HOR_FLIP                            3U
 +#define PP_ROTATION_VER_FLIP                            4U
 +#define PP_ROTATION_180                                 5U
++
++#define PP_DST_FB0                                      0U
++#define PP_DST_FB1                                      1U
++
++struct _dc_overlay_rect {
++    unsigned int tlx;
++    unsigned int tly;
++    unsigned int brx;
++    unsigned int bry;
++};
++
++typedef enum _dc_alpha_blending_mode
++{
++DC_BLEND_MODE_CLEAR = 0x0,
++DC_BLEND_MODE_SRC,
++DC_BLEND_MODE_DST,
++DC_BLEND_MODE_SRC_OVER,
++DC_BLEND_MODE_DST_OVER,
++DC_BLEND_MODE_SRC_IN,
++DC_BLEND_MODE_DST_IN,
++DC_BLEND_MODE_SRC_OUT,
++}
++dc_alpha_blending_mode;
++
++#define ULTRAFBIO_OVERLAY_RECT     0x46A8
++#define ULTRAFBIO_BLENDING_MODE    0x46A4
 +
 +G_BEGIN_DECLS
 +
@@ -771,6 +878,7 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.h gst-plugins-
 +  unsigned char *framebuffer;
 +  int   fd;
 +  int   fd_vc8k;
++  dc_alpha_blending_mode dcblend;
 +  struct vc8k_pp_params  pp;
 +};
 +
@@ -784,7 +892,7 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/gstnufbdevsink.h gst-plugins-
 +#endif /* __GST_NUFBDEVSINK_H__ */
 diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/Makefile.am gst-plugins-bad-1.18.5/sys/nufbdev/Makefile.am
 --- gst-plugins-bad-1.18.5_orig/sys/nufbdev/Makefile.am	1970-01-01 08:00:00.000000000 +0800
-+++ gst-plugins-bad-1.18.5/sys/nufbdev/Makefile.am	2022-02-17 15:49:08.631027646 +0800
++++ gst-plugins-bad-1.18.5/sys/nufbdev/Makefile.am	2022-03-25 13:49:03.953321183 +0800
 @@ -0,0 +1,14 @@
 +plugin_LTLIBRARIES = libgstnufbdevsink.la
 +
@@ -802,7 +910,7 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/Makefile.am gst-plugins-bad-1
 +noinst_HEADERS = gstnufbdevsink.h
 diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/Makefile.in gst-plugins-bad-1.18.5/sys/nufbdev/Makefile.in
 --- gst-plugins-bad-1.18.5_orig/sys/nufbdev/Makefile.in	1970-01-01 08:00:00.000000000 +0800
-+++ gst-plugins-bad-1.18.5/sys/nufbdev/Makefile.in	2022-02-17 15:49:08.631027646 +0800
++++ gst-plugins-bad-1.18.5/sys/nufbdev/Makefile.in	2022-03-25 13:49:03.953321183 +0800
 @@ -0,0 +1,1091 @@
 +# Makefile.in generated by automake 1.16.2 from Makefile.am.
 +# @configure_input@
@@ -1897,7 +2005,7 @@ diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/Makefile.in gst-plugins-bad-1
 +.NOEXPORT:
 diff -Naur gst-plugins-bad-1.18.5_orig/sys/nufbdev/meson.build gst-plugins-bad-1.18.5/sys/nufbdev/meson.build
 --- gst-plugins-bad-1.18.5_orig/sys/nufbdev/meson.build	1970-01-01 08:00:00.000000000 +0800
-+++ gst-plugins-bad-1.18.5/sys/nufbdev/meson.build	2022-02-17 15:49:08.635027646 +0800
++++ gst-plugins-bad-1.18.5/sys/nufbdev/meson.build	2022-03-25 13:49:03.953321183 +0800
 @@ -0,0 +1,24 @@
 +nufbdevsink_sources = [
 +  'gstnufbdevsink.c',
