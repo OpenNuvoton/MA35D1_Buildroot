@@ -38,12 +38,25 @@ config BR2_PACKAGE_JPEG_TURBO
 
 	  http://www.libjpeg-turbo.org
 
+config BR2_PACKAGE_JPEG_TURBO_MA35D1
+	bool "jpeg-turbo-ma35d1"
+	select BR2_PACKAGE_HAS_JPEG
+	help
+	  Libjpeg-turbo is a derivative of libjpeg that uses SIMD
+	  instructions (MMX, SSE2, NEON) to accelerate baseline JPEG
+	  compression and decompression on x86, x86-64, and ARM
+	  systems.
+
+	  http://www.libjpeg-turbo.org
+
 # libjpeg from br2-external trees, if any
 source "$BR2_BASE_DIR/.br2-external.in.jpeg"
 
 endchoice
 
 source "package/jpeg-turbo/Config.in.options"
+
+source "package/jpeg-turbo-ma35d1/Config.in.options"
 
 config BR2_PACKAGE_HAS_JPEG
 	bool
@@ -52,5 +65,6 @@ config BR2_PACKAGE_PROVIDES_JPEG
 	string
 	default "libjpeg"    if BR2_PACKAGE_LIBJPEG
 	default "jpeg-turbo" if BR2_PACKAGE_JPEG_TURBO
+	default "jpeg-turbo-ma35d1" if BR2_PACKAGE_JPEG_TURBO_MA35D1
 
 endif
