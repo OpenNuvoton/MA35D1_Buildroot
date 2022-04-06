@@ -1,6 +1,6 @@
 diff -Naur libjpeg-turbo-2.1.3/CMakeLists.txt libjpeg-turbo-2.1.3_new/CMakeLists.txt
 --- libjpeg-turbo-2.1.3/CMakeLists.txt	2022-02-26 02:53:05.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/CMakeLists.txt	2022-03-28 09:48:15.263598988 +0800
++++ libjpeg-turbo-2.1.3_new/CMakeLists.txt	2022-04-06 10:38:23.811459389 +0800
 @@ -582,13 +582,28 @@
    add_subdirectory(java)
  endif()
@@ -63,7 +63,7 @@ diff -Naur libjpeg-turbo-2.1.3/CMakeLists.txt libjpeg-turbo-2.1.3_new/CMakeLists
  include(cmakescripts/BuildPackages.cmake)
 diff -Naur libjpeg-turbo-2.1.3/jdapimin.c libjpeg-turbo-2.1.3_new/jdapimin.c
 --- libjpeg-turbo-2.1.3/jdapimin.c	2022-02-26 02:53:05.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/jdapimin.c	2022-03-28 09:48:15.263598988 +0800
++++ libjpeg-turbo-2.1.3_new/jdapimin.c	2022-04-06 10:38:23.819459390 +0800
 @@ -31,9 +31,86 @@
   * The error manager must already be set up (in case memory manager fails).
   */
@@ -151,7 +151,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapimin.c libjpeg-turbo-2.1.3_new/jdapimin.c
    int i;
  
    /* Guard against version mismatches between library and caller. */
-@@ -93,8 +170,40 @@
+@@ -93,8 +170,46 @@
      (*cinfo->mem->alloc_small) ((j_common_ptr)cinfo, JPOOL_PERMANENT,
                                  sizeof(my_decomp_master));
    memset(cinfo->master, 0, sizeof(my_decomp_master));
@@ -172,8 +172,8 @@ diff -Naur libjpeg-turbo-2.1.3/jdapimin.c libjpeg-turbo-2.1.3_new/jdapimin.c
 +  {
 +	_jpeg_CreateDecompress(cinfo, version, structsize, FALSE);
 +  }
-+}
-+
+ }
+ 
 +static void vc8000_destroy_decompress(j_decompress_ptr cinfo)
 +{
 +  if(cinfo->master->bHWJpegDecodeDone)
@@ -183,16 +183,82 @@ diff -Naur libjpeg-turbo-2.1.3/jdapimin.c libjpeg-turbo-2.1.3_new/jdapimin.c
 +  if(cinfo->master->bHWJpegCodecOpened)
 +    vc8000_v4l2_close(&cinfo->master->sHWJpegVideo);
 +
++  if(cinfo->master->pMemSrcBuf)
++  {
++    free(cinfo->master->pMemSrcBuf);
++    cinfo->master->pMemSrcBuf = NULL;
++  }
++
 +  cinfo->master->bHWJpegCodecOpened = FALSE;  
 +  cinfo->master->bHWJpegDecodeDone = FALSE;
- }
- 
++}
++
 +#endif
 +
  
  /*
   * Destruction of a JPEG decompression object
-@@ -378,9 +487,28 @@
+@@ -259,6 +374,59 @@
+       cinfo->global_state != DSTATE_INHEADER)
+     ERREXIT1(cinfo, JERR_BAD_STATE, cinfo->global_state);
+ 
++#if 0 //def WITH_VC8000
++  if(cinfo->master->eJpegSrcType == eJPEG_SRC_UNKNOWN)
++  {
++    struct jpeg_source_mgr *src = cinfo->src;
++	uint32_t u32BitStreamLen = 0;
++	uint8_t *pu8BitStreamBufPtr = NULL;
++	uint8_t *pu8TempBufPtr = NULL;
++	boolean  bCopyDone = FALSE;
++	
++	if(src)
++	{
++		/* Initialize application's data source module */
++		(*cinfo->src->init_source)(cinfo);
++
++		while(src->fill_input_buffer(cinfo)){
++
++			if(src->bytes_in_buffer) {
++				pu8TempBufPtr = realloc(pu8BitStreamBufPtr, u32BitStreamLen + src->bytes_in_buffer + 100);
++				if(pu8TempBufPtr)
++					pu8BitStreamBufPtr = pu8TempBufPtr;
++				else
++					break;
++				memcpy(pu8BitStreamBufPtr + u32BitStreamLen, src->next_input_byte, src->bytes_in_buffer);
++				u32BitStreamLen += src->bytes_in_buffer;
++
++				src->bytes_in_buffer = 0;
++				
++				if((pu8BitStreamBufPtr[u32BitStreamLen - 2] == (JOCTET)0xFF) &&
++					(pu8BitStreamBufPtr[u32BitStreamLen - 1] == (JOCTET)JPEG_EOI))
++				{
++					bCopyDone = TRUE;
++					break;
++				}
++			}
++		}
++		
++		if(bCopyDone)
++		{
++			(*cinfo->src->term_source)(cinfo);
++			cinfo->src = NULL;
++			jpeg_mem_src(cinfo, pu8BitStreamBufPtr, u32BitStreamLen);
++			cinfo->master->pMemSrcBuf = pu8BitStreamBufPtr;
++		}
++		else
++		{
++			if(pu8BitStreamBufPtr)
++				free(pu8BitStreamBufPtr);
++		}
++    }
++  }
++
++#endif
++
+   retcode = jpeg_consume_input(cinfo);
+ 
+   switch (retcode) {
+@@ -378,9 +546,28 @@
   * a suspending data source is used.
   */
  
@@ -223,8 +289,8 @@ diff -Naur libjpeg-turbo-2.1.3/jdapimin.c libjpeg-turbo-2.1.3_new/jdapimin.c
      /* Terminate final pass of non-buffered mode */
 diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 --- libjpeg-turbo-2.1.3/jdapistd.c	2022-02-26 02:53:05.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/jdapistd.c	2022-03-28 09:48:15.263598988 +0800
-@@ -41,9 +41,281 @@
++++ libjpeg-turbo-2.1.3_new/jdapistd.c	2022-04-06 10:38:23.819459390 +0800
+@@ -41,9 +41,296 @@
   * a suspending data source is used.
   */
  
@@ -287,7 +353,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +}
 +
 +
-+static boolean vc8000_start_decompress(j_decompress_ptr cinfo)
++static int vc8000_start_decompress(j_decompress_ptr cinfo)
 +{
 +  int pixel_format;
 +  int i32Ret;
@@ -326,14 +392,14 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +    else if(eSubsampling == eJPEG_SUBSAMPLING_422)
 +      pixel_format = V4L2_PIX_FMT_YUYV;  //packet format
 +    else
-+      return FALSE;    
++      return -1;    
 +  }
 +//  else if(cinfo->out_color_space == JCS_YCbCr)
 +//  {
 +//    pixel_format = V4L2_PIX_FMT_YUYV;
 +//  }
 +  else 
-+	return FALSE;
++	return -2;
 +
 +  jpeg_calc_output_dimensions(cinfo);
 +
@@ -368,7 +434,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +	//output to memory buffer case. 
 +	//output dimension is too small, maybe using software decoder is better.
 +    if((estimate_output_width < 64) && (estimate_output_height < 64))
-+		return FALSE;
++		return -3;
 +  }
 +
 +  if((iRotOP == PP_ROTATION_RIGHT_90) || (iRotOP == PP_ROTATION_LEFT_90))
@@ -383,7 +449,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +	((decode_src_width < estimate_output_width) && (decode_src_height > estimate_output_height)))
 +  {
 +	//the scale up/down of width and height must be consistent
-+	return FALSE;
++	return -4;
 +  }
 +
 +  double dStartTime = getTimeSec();
@@ -401,8 +467,8 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +			pixel_format);
 +
 +  if(i32Ret != 0) {
-+	printf("Not support by VC8000, output dimension width: %d, height: %d \n", estimate_output_width, estimate_output_height);
-+    return FALSE;
++//	printf("Not support by VC8000, output dimension width: %d, height: %d \n", estimate_output_width, estimate_output_height);
++    return -5;
 +  }
 +
 +//  printf("vc8000_jpeg_prepare_decompress time %f sec\n", getTimeSec() - dStartTime);
@@ -417,24 +483,24 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +  {
 +	  //release resource
 +	  vc8000_jpeg_release_decompress(&cinfo->master->sHWJpegVideo);
-+	  return FALSE;
++	  return -6;
 +  }
 +  
 +  //fill bitstream to bitstream buffer
 +  struct jpeg_source_mgr *src_mgr = cinfo->master->src_hw_jpeg;
 +
-+  if(cinfo->master->bSrcTypeMem)
++  if(cinfo->master->eJpegSrcType == eJPEG_SRC_MEM)
 +  {
 +    if(src_mgr->bytes_in_buffer > u32StreamBufSize)
 +    {
 +	  //release resource
 +	  vc8000_jpeg_release_decompress(&cinfo->master->sHWJpegVideo);
-+	  return FALSE;
++	  return -7;
 +	}
 +    memcpy(pchStreamBuf, src_mgr->next_input_byte, src_mgr->bytes_in_buffer);
 +	u32StreamLen = src_mgr->bytes_in_buffer; 
 +  }
-+  else
++  else if(cinfo->master->eJpegSrcType == eJPEG_SRC_FILE)
 +  {
 +    long u64CurFilePos = cinfo->master->seek_file_pos(cinfo, 0, SEEK_SET);
 +
@@ -452,7 +518,17 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +    {
 +	  //release resource
 +	  vc8000_jpeg_release_decompress(&cinfo->master->sHWJpegVideo);
-+	  return FALSE;
++	  return -8;
++	}
++  }
++  else
++  {
++    struct jpeg_source_mgr *src = cinfo->src;
++
++	if(src)
++	{
++      vc8000_jpeg_release_decompress(&cinfo->master->sHWJpegVideo);
++      return -9;
 +	}
 +  }
 +
@@ -471,7 +547,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +  {
 +    //release resource
 +    vc8000_jpeg_release_decompress(&cinfo->master->sHWJpegVideo);
-+    return FALSE;
++    return -10;
 +  }
 +
 +//  printf("vc8000_jpeg_poll_decode_done time %f sec\n", getTimeSec() - dStartTime);
@@ -482,7 +558,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
 +  cinfo->master->u32DecodeImageHeight = cinfo->master->sHWJpegVideo.cap_h;
 +  cinfo->master->bHWJpegDecodeDone = TRUE;
 +
-+  return TRUE;
++  return 0;
 +}
 +
 +
@@ -492,13 +568,18 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
  jpeg_start_decompress(j_decompress_ptr cinfo)
  {
 +#ifdef WITH_VC8000
++  int ret;
 +
 +  if(cinfo->master->bHWJpegDeocdeEnable == TRUE) {
 +    vc8000_CreateDecompress(cinfo);
 +  }
 +
 +  if(cinfo->master->bHWJpegCodecOpened) {
-+    vc8000_start_decompress(cinfo);
++	ret = vc8000_start_decompress(cinfo);
++    if(ret != 0)
++    {
++		printf("fallback to software decompress reason %d \n", ret);
++	}
 +  }
 +
 +#endif
@@ -506,7 +587,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
    if (cinfo->global_state == DSTATE_READY) {
      /* First call: initialize master control, select active modules */
      jinit_master_decompress(cinfo);
-@@ -268,6 +540,302 @@
+@@ -268,6 +555,302 @@
   * an oversize buffer (max_lines > scanlines remaining) is not an error.
   */
  
@@ -809,7 +890,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
  GLOBAL(JDIMENSION)
  jpeg_read_scanlines(j_decompress_ptr cinfo, JSAMPARRAY scanlines,
                      JDIMENSION max_lines)
-@@ -281,6 +849,22 @@
+@@ -281,6 +864,22 @@
      return 0;
    }
  
@@ -832,7 +913,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
    /* Call progress monitor hook if present */
    if (cinfo->progress != NULL) {
      cinfo->progress->pass_counter = (long)cinfo->output_scanline;
-@@ -587,6 +1171,117 @@
+@@ -587,6 +1186,117 @@
   * Processes exactly one iMCU row per call, unless suspended.
   */
  
@@ -950,7 +1031,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
  GLOBAL(JDIMENSION)
  jpeg_read_raw_data(j_decompress_ptr cinfo, JSAMPIMAGE data,
                     JDIMENSION max_lines)
-@@ -600,6 +1295,18 @@
+@@ -600,6 +1310,18 @@
      return 0;
    }
  
@@ -971,7 +1052,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdapistd.c libjpeg-turbo-2.1.3_new/jdapistd.c
      cinfo->progress->pass_counter = (long)cinfo->output_scanline;
 diff -Naur libjpeg-turbo-2.1.3/jdatadst.c libjpeg-turbo-2.1.3_new/jdatadst.c
 --- libjpeg-turbo-2.1.3/jdatadst.c	2022-02-26 02:53:05.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/jdatadst.c	2022-03-28 09:48:15.263598988 +0800
++++ libjpeg-turbo-2.1.3_new/jdatadst.c	2022-04-06 10:38:23.819459390 +0800
 @@ -20,6 +20,7 @@
  
  /* this is not a core library module, so it doesn't define JPEG_INTERNALS */
@@ -1039,7 +1120,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdatadst.c libjpeg-turbo-2.1.3_new/jdatadst.c
 +#endif
 diff -Naur libjpeg-turbo-2.1.3/jdatasrc.c libjpeg-turbo-2.1.3_new/jdatasrc.c
 --- libjpeg-turbo-2.1.3/jdatasrc.c	2022-02-26 02:53:05.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/jdatasrc.c	2022-03-28 09:48:15.263598988 +0800
++++ libjpeg-turbo-2.1.3_new/jdatasrc.c	2022-04-06 10:38:23.819459390 +0800
 @@ -20,6 +20,7 @@
  
  /* this is not a core library module, so it doesn't define JPEG_INTERNALS */
@@ -1097,7 +1178,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdatasrc.c libjpeg-turbo-2.1.3_new/jdatasrc.c
    src->pub.next_input_byte = NULL; /* until buffer loaded */
 +
 +#ifdef WITH_VC8000
-+  cinfo->master->bSrcTypeMem = FALSE;
++  cinfo->master->eJpegSrcType = eJPEG_SRC_UNKNOWN;
 +
 +  if (cinfo->master->src_hw_jpeg == NULL) {     /* first time for this JPEG object? */
 +    cinfo->master->src_hw_jpeg = (struct jpeg_source_mgr *)
@@ -1126,7 +1207,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdatasrc.c libjpeg-turbo-2.1.3_new/jdatasrc.c
 +  src->infile = infile;
 +  src->pub.bytes_in_buffer = 0; /* forces fill_input_buffer on first read */
 +  src->pub.next_input_byte = NULL; /* until buffer loaded */
-+  cinfo->master->bSrcTypeMem = FALSE;
++  cinfo->master->eJpegSrcType = eJPEG_SRC_FILE;
 +  cinfo->master->seek_file_pos = file_seek_file_pos;
 +
 +#endif
@@ -1134,14 +1215,14 @@ diff -Naur libjpeg-turbo-2.1.3/jdatasrc.c libjpeg-turbo-2.1.3_new/jdatasrc.c
  }
  
  
-@@ -291,5 +364,31 @@
+@@ -291,5 +364,32 @@
    src->term_source = term_source;
    src->bytes_in_buffer = (size_t)insize;
    src->next_input_byte = (const JOCTET *)inbuffer;
 +
 +#ifdef WITH_VC8000
 +
-+  cinfo->master->bSrcTypeMem = TRUE;
++  cinfo->master->eJpegSrcType = eJPEG_SRC_UNKNOWN;
 +
 +  if (cinfo->master->src_hw_jpeg == NULL) {     /* first time for this JPEG object? */
 +    cinfo->master->src_hw_jpeg = (struct jpeg_source_mgr *)
@@ -1162,13 +1243,14 @@ diff -Naur libjpeg-turbo-2.1.3/jdatasrc.c libjpeg-turbo-2.1.3_new/jdatasrc.c
 +  src->term_source = term_source;
 +  src->bytes_in_buffer = (size_t)insize;
 +  src->next_input_byte = (const JOCTET *)inbuffer;
-+  cinfo->master->bSrcTypeMem = TRUE;
++  cinfo->master->eJpegSrcType = eJPEG_SRC_MEM;
++  cinfo->master->pMemSrcBuf = NULL;
 +#endif
  }
  #endif
 diff -Naur libjpeg-turbo-2.1.3/jdatasrc-tj.c libjpeg-turbo-2.1.3_new/jdatasrc-tj.c
 --- libjpeg-turbo-2.1.3/jdatasrc-tj.c	2022-02-26 02:53:05.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/jdatasrc-tj.c	2022-03-28 09:48:15.267598986 +0800
++++ libjpeg-turbo-2.1.3_new/jdatasrc-tj.c	2022-04-06 10:38:23.819459390 +0800
 @@ -20,6 +20,7 @@
  
  /* this is not a core library module, so it doesn't define JPEG_INTERNALS */
@@ -1183,7 +1265,7 @@ diff -Naur libjpeg-turbo-2.1.3/jdatasrc-tj.c libjpeg-turbo-2.1.3_new/jdatasrc-tj
    src->next_input_byte = (const JOCTET *)inbuffer;
 +
 +#ifdef WITH_VC8000
-+  cinfo->master->bSrcTypeMem = FALSE;  
++  cinfo->master->eJpegSrcType = eJPEG_SRC_UNKNOWN;
 +
 +  if (cinfo->master->src_hw_jpeg == NULL) {     /* first time for this JPEG object? */
 +    cinfo->master->src_hw_jpeg = (struct jpeg_source_mgr *)
@@ -1204,13 +1286,13 @@ diff -Naur libjpeg-turbo-2.1.3/jdatasrc-tj.c libjpeg-turbo-2.1.3_new/jdatasrc-tj
 +  src->term_source = term_source;
 +  src->bytes_in_buffer = (size_t)insize;
 +  src->next_input_byte = (const JOCTET *)inbuffer;
-+  cinfo->master->bSrcTypeMem = TRUE;  
++  cinfo->master->eJpegSrcType = eJPEG_SRC_MEM;
 +#endif
 +
  }
 diff -Naur libjpeg-turbo-2.1.3/jpegint.h libjpeg-turbo-2.1.3_new/jpegint.h
 --- libjpeg-turbo-2.1.3/jpegint.h	2022-02-26 02:53:05.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/jpegint.h	2022-03-28 09:48:15.267598986 +0800
++++ libjpeg-turbo-2.1.3_new/jpegint.h	2022-04-06 10:38:23.819459390 +0800
 @@ -16,6 +16,9 @@
   * applications using the library shouldn't need to include this file.
   */
@@ -1221,7 +1303,7 @@ diff -Naur libjpeg-turbo-2.1.3/jpegint.h libjpeg-turbo-2.1.3_new/jpegint.h
  
  /* Declarations for both compression & decompression */
  
-@@ -157,6 +160,19 @@
+@@ -157,6 +160,26 @@
  
  /* Declarations for decompression modules */
  
@@ -1236,19 +1318,26 @@ diff -Naur libjpeg-turbo-2.1.3/jpegint.h libjpeg-turbo-2.1.3_new/jpegint.h
 +  unsigned int img_pos_y;
 +  int rotation_op;
 +};
++
++typedef enum {
++	eJPEG_SRC_UNKNOWN,
++	eJPEG_SRC_MEM,	
++	eJPEG_SRC_FILE	
++}E_JPEG_SRC_TYPE;
++
 +#endif
 +
  /* Master control module */
  struct jpeg_decomp_master {
    void (*prepare_for_output_pass) (j_decompress_ptr cinfo);
-@@ -174,6 +190,29 @@
+@@ -174,6 +197,30 @@
  
    /* Last iMCU row that was successfully decoded */
    JDIMENSION last_good_iMCU_row;
 +
 +#ifdef WITH_VC8000
 +  long (*seek_file_pos) (j_decompress_ptr cinfo, long int offset, int origin);
-+  boolean bSrcTypeMem; 
++  E_JPEG_SRC_TYPE eJpegSrcType; 
 +
 +  /* Source of compressed data for HW JPEG decoder*/
 +  struct jpeg_source_mgr *src_hw_jpeg;
@@ -1266,14 +1355,15 @@ diff -Naur libjpeg-turbo-2.1.3/jpegint.h libjpeg-turbo-2.1.3_new/jpegint.h
 +
 +  boolean bHWJpegDirectFBEnable;
 +  struct jpeg_direct_fb_param sDirectFBParam;
-+
++  
++  JOCTET *pMemSrcBuf;
 +#endif
  };
  
  /* Input control module */
 diff -Naur libjpeg-turbo-2.1.3/jpeglib_ext.h libjpeg-turbo-2.1.3_new/jpeglib_ext.h
 --- libjpeg-turbo-2.1.3/jpeglib_ext.h	1970-01-01 08:00:00.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/jpeglib_ext.h	2022-03-28 09:48:15.267598986 +0800
++++ libjpeg-turbo-2.1.3_new/jpeglib_ext.h	2022-04-06 10:38:23.823459390 +0800
 @@ -0,0 +1,33 @@
 +#ifndef JPEGLIB_EXT_H
 +#define JPEGLIB_EXT_H
@@ -1310,7 +1400,7 @@ diff -Naur libjpeg-turbo-2.1.3/jpeglib_ext.h libjpeg-turbo-2.1.3_new/jpeglib_ext
 +#endif
 diff -Naur libjpeg-turbo-2.1.3/msm-v4l2-controls.h libjpeg-turbo-2.1.3_new/msm-v4l2-controls.h
 --- libjpeg-turbo-2.1.3/msm-v4l2-controls.h	1970-01-01 08:00:00.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/msm-v4l2-controls.h	2022-03-28 09:48:15.267598986 +0800
++++ libjpeg-turbo-2.1.3_new/msm-v4l2-controls.h	2022-04-06 10:38:23.823459390 +0800
 @@ -0,0 +1,423 @@
 +#ifndef __MSM_V4L2_CONTROLS_H__
 +#define __MSM_V4L2_CONTROLS_H__
@@ -1737,8 +1827,8 @@ diff -Naur libjpeg-turbo-2.1.3/msm-v4l2-controls.h libjpeg-turbo-2.1.3_new/msm-v
 +#endif/* __MSM_V4L2_CONTROLS_H__ */
 diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.c libjpeg-turbo-2.1.3_new/vc8000_v4l2.c
 --- libjpeg-turbo-2.1.3/vc8000_v4l2.c	1970-01-01 08:00:00.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/vc8000_v4l2.c	2022-03-28 09:48:15.267598986 +0800
-@@ -0,0 +1,973 @@
++++ libjpeg-turbo-2.1.3_new/vc8000_v4l2.c	2022-04-06 10:38:23.823459390 +0800
+@@ -0,0 +1,984 @@
 +/**
 + * @file vc8000_v4l2.c: vc8000 for v4l2 driver
 + *
@@ -1886,7 +1976,7 @@ diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.c libjpeg-turbo-2.1.3_new/vc8000_v4l2
 +
 +#define VC8KIOC_PP_SET_CONFIG	_IOW ('v', 91, struct vc8k_pp_params)
 +#define VC8KIOC_PP_GET_CONFIG	_IOW ('v', 92, struct vc8k_pp_params)
-+//#define VC8KIOC_GET_BUF_DMA_ADDR	_IOWR ('v', 193, struct v4l2_buffer)
++#define VC8KIOC_GET_BUF_PHY_ADDR	_IOWR ('v', 193, struct v4l2_buffer)
 +
 +int vc8000_v4l2_open(struct video *psVideo)
 +{
@@ -2216,13 +2306,15 @@ diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.c libjpeg-turbo-2.1.3_new/vc8000_v4l2
 +		buf.memory = V4L2_MEMORY_MMAP;
 +		buf.index = n;
 +
-+		ret = ioctl(vid->fd, VC8KIOC_GET_BUF_DMA_ADDR, &buf);
++		ret = ioctl(vid->fd, VC8KIOC_GET_BUF_PHY_ADDR, &buf);
 +		if (ret != 0) {
-+			fprintf(stderr, "QUERYBUF failed on CAPTURE queue (%s) \n", strerror(errno));
++			fprintf(stderr, "VC8KIOC_GET_BUF_PHY_ADDR failed on CAPTURE queue (%s) \n", strerror(errno));
 +			return -1;
 +		}
 +		
-+		vid->cap_buf_dma_addr[n][0] = buf.reserved;
++		fprintf(stderr, "VC8KIOC_GET_BUF_PHY_ADDR address:%x \n", buf.reserved);
++		
++//		vid->cap_buf_dma_addr[n][0] = buf.reserved;
 +	}
 +#endif
 +#if defined (ENABLE_DBG)
@@ -2258,11 +2350,11 @@ diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.c libjpeg-turbo-2.1.3_new/vc8000_v4l2
 +	sVC8K_PP.pp_out_dst = psFBInfo->frame_buf_no;
 +	sVC8K_PP.libjpeg_mode = 1;
 +		
-+	ioctl(psVideo->fd, VC8KIOC_PP_SET_CONFIG, sVC8K_PP);
++	ioctl(psVideo->fd, VC8KIOC_PP_SET_CONFIG, &sVC8K_PP);
 +
 +#if defined (ENABLE_DBG)
 +//	printf("DDDDD vc8000_v4l2_setup_post_processing sVC8K_PP.enable_pp %x \n", sVC8K_PP.enable_pp);
-+	printf("DDDDD vc8000_v4l2_setup_post_processing sVC8K_PP.frame_buf_vaddr %p \n", sVC8K_PP.frame_buf_vaddr);
++	printf("DDDDD vc8000_v4l2_setup_post_processing sVC8K_PP.frame_buf_paddr %p \n", sVC8K_PP.frame_buf_paddr);
 +//	printf("DDDDD vc8000_v4l2_setup_post_processing sVC8K_PP.frame_buff_size %d \n", sVC8K_PP.frame_buff_size);
 +	printf("DDDDD vc8000_v4l2_setup_post_processing sVC8K_PP.frame_buf_w %d \n", sVC8K_PP.frame_buf_w);
 +	printf("DDDDD vc8000_v4l2_setup_post_processing sVC8K_PP.frame_buf_h %d \n", sVC8K_PP.frame_buf_h);
@@ -2384,9 +2476,12 @@ diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.c libjpeg-turbo-2.1.3_new/vc8000_v4l2
 +
 +	*finished = 0;
 +
-+	if (buf.flags & V4L2_QCOM_BUF_FLAG_EOS ||
-+	    buf.m.planes[0].bytesused == 0)
++	if (buf.flags & V4L2_BUF_FLAG_DONE ||
++	    buf.m.planes[0].bytesused)
 +		*finished = 1;
++
++	if (buf.flags & V4L2_BUF_FLAG_ERROR)
++		*finished = 0;
 +
 +	*bytesused = buf.m.planes[0].bytesused;
 +	*n = buf.index;
@@ -2619,12 +2714,13 @@ diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.c libjpeg-turbo-2.1.3_new/vc8000_v4l2
 +)
 +{
 +	int n;
++	int ret;
 +	//Get output dequeued buffer index
 +	for(n = 0; n < psVideo->out_buf_cnt; n ++)
 +	{
 +		if(psVideo->out_buf_addr[n] == pchBufferAddr)
 +		{
-+			vc8000_v4l2_queue_output(psVideo, n, u32StreamLen);
++			ret = vc8000_v4l2_queue_output(psVideo, n, u32StreamLen);
 +			psVideo->out_buf_flag[n] = eV4L2_BUF_INQUEUE;
 +			return 0;
 +		}
@@ -2700,6 +2796,11 @@ diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.c libjpeg-turbo-2.1.3_new/vc8000_v4l2
 +
 +	*p_cap_index = cap_index;
 +
++	if (finished == 0) {
++		return -3;
++	}
++
++//	fprintf(stdout, "vc8000_jpeg_poll_decode_done result %d \n", ret);
 +	return ret;
 +}
 +
@@ -2714,7 +2815,7 @@ diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.c libjpeg-turbo-2.1.3_new/vc8000_v4l2
 +
 diff -Naur libjpeg-turbo-2.1.3/vc8000_v4l2.h libjpeg-turbo-2.1.3_new/vc8000_v4l2.h
 --- libjpeg-turbo-2.1.3/vc8000_v4l2.h	1970-01-01 08:00:00.000000000 +0800
-+++ libjpeg-turbo-2.1.3_new/vc8000_v4l2.h	2022-03-28 09:48:15.267598986 +0800
++++ libjpeg-turbo-2.1.3_new/vc8000_v4l2.h	2022-04-06 10:38:23.823459390 +0800
 @@ -0,0 +1,238 @@
 +/**
 + * @file vc8000_v4l2.h vc8000 v4l2 driver
