@@ -22,12 +22,6 @@
         "image":
         [
             {
-              "offset": "0x10000",
-              "loadaddr": "0x28030000",
-              "type": "2",
-              "file": "ddrimg_tfa.bin"
-            },            
-            {
               "offset": "0x20000",
               "loadaddr": "0x28023000",
               "type": "3",

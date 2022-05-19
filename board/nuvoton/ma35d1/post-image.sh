@@ -67,7 +67,6 @@ IMAGE_CMD_spinand() {
 		( \
 			cd ${BINARIES_DIR}; \
 			ln -sf ${MACHINE}.dtb Image.dtb; \
-			cp ${NUWRITER_DIR}/ddrimg_tfa.bin ${BINARIES_DIR}; \
 			cp fip.bin fip.bin-spinand; \
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinand.json; \
 			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinand.bin; \
@@ -92,7 +91,6 @@ IMAGE_CMD_nand() {
 		( \
 			cd ${BINARIES_DIR}; \
 			ln -sf ${MACHINE}.dtb Image.dtb; \
-			cp ${NUWRITER_DIR}/ddrimg_tfa.bin ${BINARIES_DIR}; \
 			cp fip.bin fip.bin-nand; \
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-nand.json; \
 			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-nand.bin; \
@@ -131,10 +129,9 @@ IMAGE_CMD_sdcard()
 		cp uboot-env.bin uboot-env.bin-sdcard; \
 		cp uboot-env.txt uboot-env.txt-sdcard; \
 		cp fip.bin fip.bin-sdcard; \
-		cp ${NUWRITER_DIR}/ddrimg_tfa.bin ${BINARIES_DIR}; \
 		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-sdcard.json; \
 		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
-		$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",9,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' > ${NUWRITER_DIR}/pack-sdcard-tmp.json); \
+		$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' > ${NUWRITER_DIR}/pack-sdcard-tmp.json); \
 		cp ${NUWRITER_DIR}/pack-sdcard-tmp.json ${NUWRITER_DIR}/pack-sdcard.json; \
 		rm ${NUWRITER_DIR}/pack-sdcard-tmp.json; \
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-sdcard.json; \
@@ -145,8 +142,6 @@ IMAGE_CMD_sdcard()
 
 	# 0x400
 	dd if=${BINARIES_DIR}/header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin of=${SDCARD} conv=notrunc seek=2 bs=512 &>${NULLDEV}
-	# 0x10000
-        dd if=${NUWRITER_DIR}/ddrimg_tfa.bin of=${SDCARD} conv=notrunc seek=128 bs=512 &>${NULLDEV}
         # 0x20000
         dd if=${BINARIES_DIR}/bl2.dtb of=${SDCARD} conv=notrunc seek=256 bs=512 &>${NULLDEV}
         # 0x30000
@@ -166,29 +161,28 @@ IMAGE_CMD_sdcard()
 
 uboot_cmd() {
 	cp ${PROJECT_DIR}/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt
-	if [[ $MACHINE == "${PROJECT}-evb" ]]
+	if echo ${MACHINE} | grep -q "256"
 	then	
 		if [[ $IS_OPTEE == "yes" ]] 
 		then
 			sed -i "s/kernelmem=256M/kernelmem=248M/1" ${BINARIES_DIR}/uboot-env.txt
 		fi
 		
-	elif  [[ $MACHINE == "${PROJECT}-iot" ]]
+	elif echo ${MACHINE} | grep -q "128"
 	then
 		sed -i "s/kernelmem=256M/kernelmem=128M/1" ${BINARIES_DIR}/uboot-env.txt
 		if [[ $IS_OPTEE == "yes" ]]
 		then
 			sed -i "s/kernelmem=128M/kernelmem=120M/1" ${BINARIES_DIR}/uboot-env.txt
 		fi
-		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
-	elif  [[ $MACHINE == "${PROJECT}-som" ]]
+	elif echo ${MACHINE} | grep -q "512"
 	then
 		sed -i "s/kernelmem=256M/kernelmem=512M/1" ${BINARIES_DIR}/uboot-env.txt
 		if [[ $IS_OPTEE == "yes" ]]
 		then
 			sed -i "s/kernelmem=512M/kernelmem=504M/1" ${BINARIES_DIR}/uboot-env.txt
 		fi
-	elif  [[ $MACHINE == "${PROJECT}-som-1gb" ]]
+	elif echo ${MACHINE} | grep -q "1g"
 	then
 		sed -i "s/kernelmem=256M/kernelmem=1024M/1" ${BINARIES_DIR}/uboot-env.txt
 		if [[ $IS_OPTEE == "yes" ]]
@@ -196,8 +190,13 @@ uboot_cmd() {
 			sed -i "s/kernelmem=1024M/kernelmem=1016M/1" ${BINARIES_DIR}/uboot-env.txt
 		fi
 	fi
-	
+
 	if [[ $(echo $UBOOT_DTB_NAME | grep "sdcard0") != "" ]]
+	then
+		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
+	fi
+
+	if echo ${MACHINE} | grep -q "iot"
 	then
 		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
 	fi

@@ -10,12 +10,63 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE
 
 if BR2_TARGET_ARM_TRUSTED_FIRMWARE
 
+choice
+	prompt "In-tree Device Tree Source file names"
+config TFA_CPU800_WB128M
+	bool "ma35d1-cpu800-wb-128m"
+config TFA_CPU800_WB256M
+	bool "ma35d1-cpu800-wb-256m"
+config TFA_CPU800_WB512M
+	bool "ma35d1-cpu800-wb-512m"
+config TFA_CPU1G_WB256M
+	bool "ma35d1-cpu1g-wb-256m"
+config TFA_CPU1G_WB512M
+	bool "ma35d1-cpu1g-wb-512m"
+config TFA_CPU800_ZT1G
+	bool "ma35d1-cpu800-zt-1g"
+config TFA_CPU800_MC1G
+	bool "ma35d1-cpu800-mc-1g"
+config TFA_CPU800_ISSI1G
+	bool "ma35d1-cpu800-issi-1g"
+config TFA_CPU1G_WB128M
+	bool "ma35d1-cpu1g-zt-1g"
+config TFA_CPU1G_MC1G
+	bool "ma35d1-cpu1g-mc-1g"
+config TFA_CPU1G_ISSI1G
+	bool "ma35d1-cpu1g-issi-1g"
+endchoice
+
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
-	string "In-tree Device Tree Source file names"
+	string
+	default "ma35d1-cpu800-wb-128m" if TFA_CPU800_WB128M
+	default "ma35d1-cpu800-wb-256m" if TFA_CPU800_WB256M
+	default "ma35d1-cpu800-wb-512m" if TFA_CPU800_WB512M
+	default "ma35d1-cpu1g-wb-256m" if TFA_CPU1G_WB256M
+	default "ma35d1-cpu1g-wb-512m" if TFA_CPU1G_WB512M
+	default "ma35d1-cpu800-zt-1g" if TFA_CPU800_ZT1G
+	default "ma35d1-cpu800-mc-1g" if TFA_CPU800_MC1G
+	default "ma35d1-cpu800-issi-1g"  if TFA_CPU800_ISSI1G
+	default "ma35d1-cpu1g-zt-1g" if TFA_CPU1G_WB128M
+	default "ma35d1-cpu1g-mc-1g" if TFA_CPU1G_MC1G
+	default "ma35d1-cpu1g-issi-1g" if TFA_CPU1G_ISSI1G
 	help
 	  Name of in-tree device tree source file, without
 	  the trailing .dts. You can provide a list of
 	  dts files to build, separated by spaces.
+
+	  The currently provided device tree of TF-A are as follows:
+		- ma35d1-cpu800-wb-128m
+		- ma35d1-cpu800-wb-256m
+		- ma35d1-cpu800-wb-512m
+		- ma35d1-cpu1g-wb-256m
+		- ma35d1-cpu1g-wb-512m
+
+		- ma35d1-cpu800-zt-1g
+		- ma35d1-cpu800-mc-1g
+		- ma35d1-cpu800-issi-1g
+		- ma35d1-cpu1g-zt-1g
+		- ma35d1-cpu1g-mc-1g
+		- ma35d1-cpu1g-issi-1g
 
 choice
 	prompt "ATF Version"

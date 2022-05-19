@@ -408,6 +408,13 @@ config BR2_LINUX_KERNEL_INTREE_DTS_NAME
 	  the trailing .dts. You can provide a list of
 	  dts files to build, separated by spaces.
 
+	  The currently provided device tree of Kernel are as follows:
+		- nuvoton/ma35d1-iot-128m
+		- nuvoton/ma35d1-iot-512m
+		- nuvoton/ma35d1-som-256m
+		- nuvoton/ma35d1-som-512m
+		- nuvoton/ma35d1-som-1g
+
 config BR2_LINUX_KERNEL_CUSTOM_DTS_PATH
 	string "Out-of-tree Device Tree Source file paths"
 	help

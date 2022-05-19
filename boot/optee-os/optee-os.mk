@@ -52,6 +52,22 @@ OPTEE_OS_MAKE_OPTS += PLATFORM_FLAVOR=$(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFO
 endif
 OPTEE_OS_MAKE_OPTS += $(call qstrip,$(BR2_TARGET_OPTEE_OS_ADDITIONAL_VARIABLES))
 
+
+# OPTEE-OS for ma35d1
+ifeq ($(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM)),nuvoton)
+ifeq ($(call qstrip,$(BR2_TARGET_OPTEE_OS_ADDITIONAL_VARIABLES=)),)
+ifneq ($(call findstring,128,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
+	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=0x87900000 CFG_SHMEM_START=0x87800000
+else ifneq ($(call findstring,256,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
+	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=0x8F900000 CFG_SHMEM_START=0x8F800000
+else ifneq ($(call findstring,512,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
+	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=0x9F900000 CFG_SHMEM_START=0x9F800000
+else
+	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=0xAF900000 CFG_SHMEM_START=0xAF800000
+endif
+endif
+endif
+
 # Requests OP-TEE OS to build from subdirectory out/ of its sourcetree
 # root path otherwise the output directory path depends on the target
 # platform name.

@@ -6,12 +6,6 @@
           "file": "conv/header.bin",
           "type": 1
         },
-
-        {
-          "offset": "0xA0000",
-          "file": "ddrimg_tfa.bin",
-          "type": 0
-        },
         {
           "offset": "0xC0000",
           "file": "bl2.dtb",

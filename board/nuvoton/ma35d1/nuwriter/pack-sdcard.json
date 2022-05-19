@@ -11,11 +11,6 @@
       "type": 0
     },
     {
-      "offset": "0x10000",
-      "file": "ddrimg_tfa.bin",
-      "type": 0
-    },
-    {
       "offset": "0x20000",
       "file": "bl2.dtb",
       "type": 0

@@ -23,75 +23,77 @@ Buildroot comes with a basic configuration for a number of boards. Run
 
 The following boards were test in this release:
 
-	- nuvoton_ma35d1_evb_defconfig
-	- nuvoton_ma35d1_evb_security_defconfig
-	- nuvoton_ma35d1_iot_defconfig
-	- nuvoton_ma35d1_iot_security_defconfig
-	- nuvoton_ma35d1_som_defconfig
-	- nuvoton_ma35d1_som_security_defconfig
+        - numaker_iot_ma35d16f70_defconfig
+        - numaker_som_ma35d16a81_defconfig
 
-	- nuvoton_ma35d1_som_1gb_defconfig
-	- nuvoton_ma35d1_som_1gb_security_defconfig
-	- nuvoton_ma35d1_som_1gb_i_defconfig
-	- nuvoton_ma35d1_som_1gb_i_security_defconfig
-	- nuvoton_ma35d1_som_1gb_z_defconfig
-	- nuvoton_ma35d1_som_1gb_z_security_defconfig
+NOTE: If you want to use buildroot in the tc version, you need to download the following:
+	git clone https://github.com/OpenNuvoton/MA35D1_Buildroot.git -b tc_v1.00
 
-        - nuvoton_ma35d1_tc_evb_defconfig
-        - nuvoton_ma35d1_tc_evb_security_defconfig
-        - nuvoton_ma35d1_tc_iot_defconfig
-        - nuvoton_ma35d1_tc_iot_security_defconfig
-        - nuvoton_ma35d1_tc_som_defconfig
-        - nuvoton_ma35d1_tc_som_security_defconfig
+Device tree of arm-trusted-firmware need to set cpu speed, DDR type and psci
+according to the board. do the following:
+1) run 'make numaker_som_ma35d16a81_defconfig'
+2) run 'make menuconfig'
+3) modify 'Bootloader --> (ma35d1-cpu800-wb-512m) In-tree Device Tree Source file names'
+The currently provided device tree are as follows:
+	- ma35d1-cpu800-wb-128m
+	- ma35d1-cpu800-wb-256m
+	- ma35d1-cpu800-wb-512m
+	- ma35d1-cpu1g-wb-256m
+	- ma35d1-cpu1g-wb-512m
 
-        - nuvoton_ma35d1_tc_som_1gb_defconfig
-        - nuvoton_ma35d1_tc_som_1gb_security_defconfig
-        - nuvoton_ma35d1_tc_som_1gb_i_defconfig
-        - nuvoton_ma35d1_tc_som_1gb_i_security_defconfig
-        - nuvoton_ma35d1_tc_som_1gb_z_defconfig
-        - nuvoton_ma35d1_tc_som_1gb_z_security_defconfig
+Device tree of Kernel need to set DDR size
+according to the board. do the following:
+1) run 'make numaker_som_ma35d16a81_defconfig'
+2) run 'make menuconfig'
+3) modify 'Kernel --> (nuvoton/ma35d1-som-256m) In-tree Device Tree Source file names '
+The currently provided device tree are as follows:
+	- nuvoton/ma35d1-iot-128m
+	- nuvoton/ma35d1-iot-512m
+	- nuvoton/ma35d1-som-256m
+	- nuvoton/ma35d1-som-512m
+	- nuvoton/ma35d1-som-1g
 
 After the complilatiobn is complete, you can get the complete image in
 "output/images" folder
 
 SD card image provides the full system to boot with TFA, u-Boot, Kernel and file system,
 do the following:
-1) run 'make nuvoton_ma35d1_evb_defconfig'
+1) run 'make nuvoton_ma35d1_som_defconfig'
 2) run 'make menuconfig'
 3) modify 'Bootloaders ---> Board defconfig' to 'ma35d1_sdcard0' or 'ma35d1_sdcard1'
 4) run 'make arm-trusted-firmware-dirclean uboot-dirclean linux-dirclean'
         if you use optee-os, you need to run 'make optee-os-dirclean'
 5) run 'make'
 6) wait while it compiles
-7) find pack-core-image-buildroot-ma35d1-evb-sdcard.bin and
-        core-image-buildroot-ma35d1-evb.rootfs.sdcard in output/images
+7) find pack-core-image-buildroot-ma35d1-som-sdcard.bin and
+        core-image-buildroot-ma35d1-som.rootfs.sdcard in output/images
 
 Run the following command to write SD card image.
 Change sdx below to match the one used by the SD card.
 
-sudo dd if=core-image-buildroot-ma35d1-evb.rootfs.sdcard of=/dev/sdx conv=fsync
+sudo dd if=core-image-buildroot-ma35d1-som.rootfs.sdcard of=/dev/sdx conv=fsync
 
 SPINAND image provides the full system to boot with TFA, u-Boot, Kernel and file system,
 do the following:
-1) run 'make nuvoton_ma35d1_evb_defconfig'
+1) run 'make numaker_som_ma35d16a81_defconfig'
 2) run 'make menuconfig'
 3) modify 'Bootloaders ---> Board defconfig' to 'ma35d1_spinand'
 4) run 'make arm-trusted-firmware-dirclean uboot-dirclean linux-dirclean'
         if you use optee-os, you need to run 'make optee-os-dirclean'
 5) run 'make'
 6) wait while it compiles
-7) find pack-core-image-buildroot-ma35d1-evb-spinand.bin in output/images
+7) find pack-core-image-buildroot-ma35d1-som-spinand.bin in output/images
 
 NAND image provides the full system to boot with TFA, u-Boot, Kernel and file system,
 do the following:
-1) run 'make nuvoton_ma35d1_evb_defconfig'
+1) run 'make numaker_som_ma35d16a81_defconfig'
 2) run 'make menuconfig'
 3) modify 'Bootloaders ---> Board defconfig' to 'ma35d1_nand'
 4) run 'make arm-trusted-firmware-dirclean uboot-dirclean linux-dirclean'
         if you use optee-os, you need to run 'make optee-os-dirclean'
 5) run 'make'
 6) wait while it compiles
-7) find pack-core-image-buildroot-ma35d1-evb-nand.bin in output/images
+7) find pack-core-image-buildroot-ma35d1-som-nand.bin in output/images
 
 NOTE: pack-core-image-buildroot-#####.bin can be used by the MA35D1 nuwriter tool
 ============================================
