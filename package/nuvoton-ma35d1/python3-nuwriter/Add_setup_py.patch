@@ -35,7 +35,7 @@ index 0000000..ff9d9a0
 +          'pycryptodome',
 +      ],
 +
-+      data_files=[('share/nuwriter/ddrimg/', ['ddrimg/MA35D1xx7.bin','ddrimg/MA35D1xx8.bin']),
++      data_files=[('share/nuwriter/ddrimg/', ['ddrimg/enc_ddr2_winbond_128mb.bin','ddrimg/enc_ddr3_issi_1gb.bin','ddrimg/enc_ddr3_micron_1gb.bin','ddrimg/enc_ddr3_winbond_256mb.bin','ddrimg/enc_ddr3_winbond_512mb.bin','ddrimg/enc_ddr3_zentel_1gb.bin']),
 +      		('bin/',['xusb.bin'])],
 +      scripts=["nuwriter.py","xusbcom.py","UnpackImage.py"],
 +      )
