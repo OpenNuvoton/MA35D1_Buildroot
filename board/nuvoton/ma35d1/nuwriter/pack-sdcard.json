@@ -7,7 +7,7 @@
     },
     {
       "offset": "0x400",
-      "file": "conv/header.bin",
+      "file": "header.bin",
       "type": 0
     },
     {

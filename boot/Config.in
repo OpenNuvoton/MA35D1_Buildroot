@@ -1,5 +1,6 @@
 menu "Bootloaders"
 
+source "boot/ma35d1-secureboot/Config.in"
 source "boot/afboot-stm32/Config.in"
 source "boot/at91bootstrap/Config.in"
 source "boot/at91bootstrap3/Config.in"

@@ -5,6 +5,7 @@ COMPANY=nuvoton
 PROJECT=ma35d1
 PROJECT_DIR=${PWD}/board/${COMPANY}/${PROJECT}
 NUWRITER_DIR=${PROJECT_DIR}/nuwriter
+NUWRITER_TARGET=${BINARIES_DIR}/${IMGDEPLOYDIR}/nuwriter
 
 IMAGE_BASENAME="core-image-buildroot"
 MACHINE=
@@ -20,6 +21,8 @@ IMAGE_ROOTFS_ALIGNMENT="4096"
 UBINIZE_ARGS="-m 2048 -p 128KiB -s 2048 -O 2048"
 IS_OPTEE=
 UBOOT_DTB_NAME=
+ECDSA_KEY=
+AES_KEY=
 
 #
 # dtb_list extracts the list of DTB files from BR2_LINUX_KERNEL_INTREE_DTS_NAME
@@ -64,17 +67,49 @@ IMAGE_CMD_spinand() {
 	)
 
 	if [ -f ${BINARIES_DIR}/rootfs.ubi ]; then
+		if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 		( \
 			cd ${BINARIES_DIR}; \
 			ln -sf ${MACHINE}.dtb Image.dtb; \
 			cp fip.bin fip.bin-spinand; \
+			$(cat ${NUWRITER_DIR}/header-spinand.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
+			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | \
+			${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${ECDSA_KEY}\"" \
+			> ${NUWRITER_TARGET}/header-spinand.json); \
+			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-spinand.json; \
+			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-enc-spinand.bin; \
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-spinand.bin header.bin;
+			cp conv/enc_bl2.dtb ${NUWRITER_TARGET}/enc_bl2.dtb; \
+			cp conv/enc_bl2.bin ${NUWRITER_TARGET}/enc_bl2.bin; \
+			echo "{\""publicx"\": \""$(head -6 conv/header_key.txt | tail +6)"\", \
+			\""publicy"\": \""$(head -7 conv/header_key.txt | tail +7)"\", \
+			\""aeskey"\": \""$(head -2 conv/header_key.txt | tail +2)"\"}" | \
+			${HOST_DIR}/bin/jq  > ${NUWRITER_TARGET}/otp_key.json; \
+			$(cat ${NUWRITER_DIR}/pack-spinand.json | \
+			${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
+			> ${NUWRITER_TARGET}/pack-spinand.json); \
+			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinand.json; \
+			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-spinand.bin; \
+			rm -rf $(date "+%m%d-*") conv pack; \
+			rm Image.dtb; \
+		)
+		else
+		( \
+			cd ${BINARIES_DIR}; \
+			ln -sf ${MACHINE}.dtb Image.dtb; \
+			cp fip.bin fip.bin-spinand; \
+			cp ${NUWRITER_DIR}/header-spinand.json ${NUWRITER_TARGET}/header-spinand.json
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinand.json; \
 			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinand.bin; \
-			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-spinand.json; \
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-spinand.bin header.bin;
+			cp ${NUWRITER_DIR}/pack-spinand.json ${NUWRITER_TARGET}/pack-spinand.json;
+			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinand.json; \
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-spinand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
 			rm Image.dtb; \
 		)
+		fi
 	fi
 } 
 
@@ -88,17 +123,49 @@ IMAGE_CMD_nand() {
 	)
 
 	if [ -f ${BINARIES_DIR}/rootfs.ubi ]; then
+		if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 		( \
 			cd ${BINARIES_DIR}; \
 			ln -sf ${MACHINE}.dtb Image.dtb; \
 			cp fip.bin fip.bin-nand; \
+			$(cat ${NUWRITER_DIR}/header-nand.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
+			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | \
+			${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${ECDSA_KEY}\"" \
+			> ${NUWRITER_TARGET}/header-nand.json); \
+			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-nand.json; \
+			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-enc-nand.bin; \
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-nand.bin header.bin;
+			cp conv/enc_bl2.dtb ${NUWRITER_TARGET}/enc_bl2.dtb; \
+			cp conv/enc_bl2.bin ${NUWRITER_TARGET}/enc_bl2.bin; \
+			echo "{\""publicx"\": \""$(head -6 conv/header_key.txt | tail +6)"\", \
+			\""publicy"\": \""$(head -7 conv/header_key.txt | tail +7)"\", \
+			\""aeskey"\": \""$(head -2 conv/header_key.txt | tail +2)"\"}" | \
+			${HOST_DIR}/bin/jq  > ${NUWRITER_TARGET}/otp_key.json; \
+			$(cat ${NUWRITER_DIR}/pack-nand.json | \
+			${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+			${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
+			> ${NUWRITER_TARGET}/pack-nand.json); \
+			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-nand.json; \
+			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-nand.bin; \
+			rm -rf $(date "+%m%d-*") conv pack; \
+			rm Image.dtb; \
+		)
+		else
+		( \
+			cd ${BINARIES_DIR}; \
+			ln -sf ${MACHINE}.dtb Image.dtb; \
+			cp fip.bin fip.bin-nand; \
+			cp ${NUWRITER_DIR}/header-nand.json ${NUWRITER_TARGET}/header-nand.json
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-nand.json; \
 			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-nand.bin; \
+			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-nand.bin header.bin;
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-nand.json; \
+			cp ${NUWRITER_DIR}/pack-nand.json ${NUWRITER_TARGET}/pack-nand.json;
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-nand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
 			rm Image.dtb; \
 		)
+		fi
 	fi
 }
 
@@ -109,7 +176,10 @@ IMAGE_CMD_sdcard()
 
 	BOOT_SPACE_ALIGNED=$(($BOOT_SPACE))
 	SDCARD_SIZE=$(($BOOT_SPACE_ALIGNED+$IMAGE_ROOTFS_ALIGNMENT+$EXT2_SIZE+$IMAGE_ROOTFS_ALIGNMENT))
-	
+
+	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
+		SDCARD=${BINARIES_DIR}/${IMGDEPLOYDIR}/${IMAGE_BASENAME}-${MACHINE}-enc.rootfs.sdcard
+	fi
 	
         # Initialize a sparse file
         dd if=/dev/zero of=${SDCARD} bs=1 count=0 seek=$((1024*$SDCARD_SIZE)) &>${NULLDEV}
@@ -123,29 +193,70 @@ IMAGE_CMD_sdcard()
 	dd if=/dev/zero of=${BINARIES_DIR}/MBR.scdard.bin bs=1 count=0 seek=512 &>${NULLDEV}
 	dd if=${SDCARD} of=${BINARIES_DIR}/MBR.scdard.bin conv=notrunc,fsync seek=0 count=1 bs=512 &>${NULLDEV}
 
+	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 	( \
 		cd ${BINARIES_DIR}; \
 		ln -sf ${MACHINE}.dtb Image.dtb;
 		cp uboot-env.bin uboot-env.bin-sdcard; \
 		cp uboot-env.txt uboot-env.txt-sdcard; \
 		cp fip.bin fip.bin-sdcard; \
-		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-sdcard.json; \
+		$(cat ${NUWRITER_DIR}/header-sdcard.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
+		${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | ${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${ECDSA_KEY}\"" \
+		> ${NUWRITER_TARGET}/header-sdcard.json); \
+		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-sdcard.json; \
+		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin; \
+		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin header.bin;
+		cp conv/enc_bl2.dtb ${NUWRITER_TARGET}/enc_bl2.dtb; \
+		cp conv/enc_bl2.bin ${NUWRITER_TARGET}/enc_bl2.bin; \
+		echo "{\""publicx"\": \""$(head -6 conv/header_key.txt | tail +6)"\", \
+		\""publicy"\": \""$(head -7 conv/header_key.txt | tail +7)"\", \
+		\""aeskey"\": \""$(head -2 conv/header_key.txt | tail +2)"\"}" | \
+		${HOST_DIR}/bin/jq  > ${NUWRITER_TARGET}/otp_key.json; \
+		$(cat ${NUWRITER_DIR}/pack-sdcard.json | \
+		${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.dtb")' | \
+		${HOST_DIR}/bin/jq 'setpath(["image",3,"file"];"nuwriter/enc_bl2.bin")' | \
+		${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' \
+		> ${NUWRITER_TARGET}/pack-sdcard.json); \
+		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
+		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin; \
+		rm -rf $(date "+%m%d-*") conv pack; \
+		rm Image.dtb; \
+		SDCARD=${BINARIES_DIR}/${IMGDEPLOYDIR}/${IMAGE_BASENAME}-${MACHINE}-enc.rootfs.sdcard
+	)
+	else
+	( \
+		cd ${BINARIES_DIR}; \
+		ln -sf ${MACHINE}.dtb Image.dtb;
+		cp uboot-env.bin uboot-env.bin-sdcard; \
+		cp uboot-env.txt uboot-env.txt-sdcard; \
+		cp fip.bin fip.bin-sdcard; \
+		cp ${NUWRITER_DIR}/header-sdcard.json ${NUWRITER_TARGET}
+		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-sdcard.json; \
 		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
-		$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' > ${NUWRITER_DIR}/pack-sdcard-tmp.json); \
-		cp ${NUWRITER_DIR}/pack-sdcard-tmp.json ${NUWRITER_DIR}/pack-sdcard.json; \
-		rm ${NUWRITER_DIR}/pack-sdcard-tmp.json; \
-		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-sdcard.json; \
+		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin header.bin;
+		$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' > ${NUWRITER_TARGET}/pack-sdcard.json); \
+		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
 		rm -rf $(date "+%m%d-*") conv pack; \
 		rm Image.dtb; \
-	)
+        )
+	fi
 
-	# 0x400
-	dd if=${BINARIES_DIR}/header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin of=${SDCARD} conv=notrunc seek=2 bs=512 &>${NULLDEV}
-        # 0x20000
-        dd if=${BINARIES_DIR}/bl2.dtb of=${SDCARD} conv=notrunc seek=256 bs=512 &>${NULLDEV}
-        # 0x30000
-        dd if=${BINARIES_DIR}/bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
+	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
+		# 0x400
+		dd if=${BINARIES_DIR}/header-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin of=${SDCARD} conv=notrunc seek=2 bs=512 &>${NULLDEV}
+		# 0x20000
+		dd if=${NUWRITER_TARGET}/enc_bl2.dtb of=${SDCARD} conv=notrunc seek=256 bs=512 &>${NULLDEV}
+		# 0x30000
+		dd if=${NUWRITER_TARGET}/enc_bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
+	else
+		# 0x400
+		dd if=${BINARIES_DIR}/header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin of=${SDCARD} conv=notrunc seek=2 bs=512 &>${NULLDEV}
+		# 0x20000
+		dd if=${BINARIES_DIR}/bl2.dtb of=${SDCARD} conv=notrunc seek=256 bs=512 &>${NULLDEV}
+		# 0x30000
+		dd if=${BINARIES_DIR}/bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
+	fi
         # 0x40000
         dd if=${BINARIES_DIR}/uboot-env.bin-sdcard of=${SDCARD} conv=notrunc seek=512 bs=512 &>${NULLDEV}
         # 0xC0000
@@ -196,6 +307,11 @@ uboot_cmd() {
 		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
 	fi
 
+	if echo $UBOOT_DTB_NAME | grep -q "spinand"
+	then
+		sed -i "s/boot_targets=/boot_targets=mtd0 /1" ${BINARIES_DIR}/uboot-env.txt
+	fi
+
 	if echo ${MACHINE} | grep -q "iot"
 	then
 		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
@@ -210,6 +326,26 @@ main()
 	MACHINE="$(dtb_list)"
 	IS_OPTEE=$(optee_image)
 	SDCARD=${BINARIES_DIR}/${IMGDEPLOYDIR}/${IMAGE_BASENAME}-${MACHINE}.rootfs.sdcard
+
+	#Create nuwriter folder
+	if [ ! -d ${NUWRITER_TARGET} ]; then
+		mkdir ${NUWRITER_TARGET}
+	else
+		rm ${NUWRITER_TARGET}/*
+	fi
+
+	if [ -f ${BINARIES_DIR}/${IMGDEPLOYDIR}/MBR.scdard.bin ]; then
+		rm ${BINARIES_DIR}/${IMGDEPLOYDIR}/MBR.scdard.bin
+	fi
+
+	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
+		ECDSA_KEY=$(sed -n -e 's/^BR2_TARGET_MA35D1_ECDSA_KEY=//p' ${BR2_CONFIG} | sed 's/\"//g')
+		AES_KEY=$(sed -n -e 's/^BR2_TARGET_MA35D1_AES_KEY=//p' ${BR2_CONFIG} | sed 's/\"//g')
+	fi
+
+	(cd ${BINARIES_DIR}/${IMGDEPLOYDIR};
+	rm fip.bin-* -f;
+	rm header-${IMAGE_BASENAME}*.bin pack-${IMAGE_BASENAME}*.bin ${IMAGE_BASENAME}*.sdcard -rf;)
 	uboot_cmd
 	if [[ $(echo $UBOOT_DTB_NAME | grep "spinand") != "" ]]
 	then
