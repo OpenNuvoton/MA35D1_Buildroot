@@ -2045,6 +2045,7 @@ menu "Miscellaneous"
 	source "package/taskd/Config.in"
 	source "package/wine/Config.in"
 	source "package/xutil_util-macros/Config.in"
+	source "package/dotnet-runtime/Config.in"
 endmenu
 
 menu "Networking applications"
