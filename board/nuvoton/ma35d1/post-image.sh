@@ -70,7 +70,7 @@ IMAGE_CMD_spinand() {
 		if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 		( \
 			cd ${BINARIES_DIR}; \
-			ln -sf ${MACHINE}.dtb Image.dtb; \
+			cp ${MACHINE}.dtb Image.dtb; \
 			cp fip.bin fip.bin-spinand; \
 			$(cat ${NUWRITER_DIR}/header-spinand.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
 			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | \
@@ -92,12 +92,11 @@ IMAGE_CMD_spinand() {
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinand.json; \
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-spinand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
-			rm Image.dtb; \
 		)
 		else
 		( \
 			cd ${BINARIES_DIR}; \
-			ln -sf ${MACHINE}.dtb Image.dtb; \
+			cp ${MACHINE}.dtb Image.dtb; \
 			cp fip.bin fip.bin-spinand; \
 			cp ${NUWRITER_DIR}/header-spinand.json ${NUWRITER_TARGET}/header-spinand.json
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinand.json; \
@@ -107,7 +106,6 @@ IMAGE_CMD_spinand() {
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinand.json; \
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-spinand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
-			rm Image.dtb; \
 		)
 		fi
 	fi
@@ -126,7 +124,7 @@ IMAGE_CMD_nand() {
 		if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 		( \
 			cd ${BINARIES_DIR}; \
-			ln -sf ${MACHINE}.dtb Image.dtb; \
+			cp ${MACHINE}.dtb Image.dtb; \
 			cp fip.bin fip.bin-nand; \
 			$(cat ${NUWRITER_DIR}/header-nand.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
 			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | \
@@ -148,12 +146,11 @@ IMAGE_CMD_nand() {
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-nand.json; \
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-nand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
-			rm Image.dtb; \
 		)
 		else
 		( \
 			cd ${BINARIES_DIR}; \
-			ln -sf ${MACHINE}.dtb Image.dtb; \
+			cp ${MACHINE}.dtb Image.dtb; \
 			cp fip.bin fip.bin-nand; \
 			cp ${NUWRITER_DIR}/header-nand.json ${NUWRITER_TARGET}/header-nand.json
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-nand.json; \
@@ -163,7 +160,6 @@ IMAGE_CMD_nand() {
 			cp ${NUWRITER_DIR}/pack-nand.json ${NUWRITER_TARGET}/pack-nand.json;
 			cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-nand.bin; \
 			rm -rf $(date "+%m%d-*") conv pack; \
-			rm Image.dtb; \
 		)
 		fi
 	fi
@@ -196,7 +192,7 @@ IMAGE_CMD_sdcard()
 	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 	( \
 		cd ${BINARIES_DIR}; \
-		ln -sf ${MACHINE}.dtb Image.dtb;
+		cp ${MACHINE}.dtb Image.dtb; \
 		cp uboot-env.bin uboot-env.bin-sdcard; \
 		cp uboot-env.txt uboot-env.txt-sdcard; \
 		cp fip.bin fip.bin-sdcard; \
@@ -220,13 +216,12 @@ IMAGE_CMD_sdcard()
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin; \
 		rm -rf $(date "+%m%d-*") conv pack; \
-		rm Image.dtb; \
 		SDCARD=${BINARIES_DIR}/${IMGDEPLOYDIR}/${IMAGE_BASENAME}-${MACHINE}-enc.rootfs.sdcard
 	)
 	else
 	( \
 		cd ${BINARIES_DIR}; \
-		ln -sf ${MACHINE}.dtb Image.dtb;
+		cp ${MACHINE}.dtb Image.dtb; \
 		cp uboot-env.bin uboot-env.bin-sdcard; \
 		cp uboot-env.txt uboot-env.txt-sdcard; \
 		cp fip.bin fip.bin-sdcard; \
@@ -238,7 +233,6 @@ IMAGE_CMD_sdcard()
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
 		rm -rf $(date "+%m%d-*") conv pack; \
-		rm Image.dtb; \
         )
 	fi
 
