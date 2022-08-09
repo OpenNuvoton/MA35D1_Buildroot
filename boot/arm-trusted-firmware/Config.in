@@ -36,6 +36,21 @@ config TFA_CPU1G_ISSI1G
 	bool "ma35d1-cpu1g-issi-1g"
 endchoice
 
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4
+	bool "Add RTP M4 into FIP Image"
+	help
+          Add RTP m4 binary file into FIP Image
+
+if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4
+
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_M4_URL
+	string "RTP M4 binary file names"
+	default "RTP-BSP/Template.bin"
+	help
+	  Name of RTP-M4 source file.
+
+endif
+
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 	string
 	default "ma35d1-cpu800-wb-128m" if TFA_CPU800_WB128M

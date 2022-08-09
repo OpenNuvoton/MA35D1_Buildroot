@@ -1,4 +1,10 @@
 if	BR2_NUVOTON_MA35D1
+config BR2_TARGET_MA35D1_BOOT_SPACE
+        int "MA35D1 Boot Space(KiB)"
+	default "32768"
+        help
+          Reserved space form MMC/SD 
+
 config BR2_TARGET_MA35D1_SECURE_BOOT
 	bool "MA35D1 Secure Boot"
 	help

@@ -10,8 +10,8 @@ ECLIPSE_DIR=$2
 SOURCE_DIR=$3
 DEPLOY_DIR=$4
 
-export PATH=$PATH:${GCC_DIR}/bin
-export DISPLAY=":99"
+PATH=$PATH:${GCC_DIR}/bin
+DISPLAY=":99"
 
 ECLIPSE_PAR='-nosplash --launcher.suppressErrors -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data Temp -cleanBuild all -import'
 
@@ -33,3 +33,10 @@ do
 	rm Temp -rf
 done < ProjList.txt
 find ${SOURCE_DIR}/SampleCode -name "*.elf" -type f | xargs -i cp {} ${DEPLOY_DIR}
+
+find ${DEPLOY_DIR} -name "*.elf" -type f | xargs -i echo {} | sed "s/\.elf//" > ProjName.txt
+while read rows
+do
+        ELFNAME=$rows
+        arm-none-eabi-objcopy -O binary $ELFNAME.elf $ELFNAME.bin
+done < ProjName.txt

@@ -57,6 +57,11 @@ optee_image()
 	
 }
 
+boot_space()
+{
+	echo $(sed -n -e 's/^BR2_TARGET_MA35D1_BOOT_SPACE=/ /p' ${BR2_CONFIG} | sed 's/M/ /g' | sed 's/\"/ /g' | sed '/^$/d')
+}
+
 IMAGE_CMD_spinand() {
 
 	( \
@@ -181,7 +186,7 @@ IMAGE_CMD_sdcard()
         dd if=/dev/zero of=${SDCARD} bs=1 count=0 seek=$((1024*$SDCARD_SIZE)) &>${NULLDEV}
 	sudo ${HOST_DIR}/sbin/parted ${SDCARD} -s mklabel msdos
 	sudo ${HOST_DIR}/sbin/parted ${SDCARD} -s unit KiB mkpart primary \
-        	$(($BOOT_SPACE_ALIGNED+$IMAGE_ROOTFS_ALIGNMENT)) \
+		$(($BOOT_SPACE_ALIGNED)) \
         	$(($BOOT_SPACE_ALIGNED+$IMAGE_ROOTFS_ALIGNMENT+$EXT2_SIZE))
 	sudo ${HOST_DIR}/sbin/parted ${SDCARD} print
 
@@ -229,7 +234,7 @@ IMAGE_CMD_sdcard()
 		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-sdcard.json; \
 		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
 		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin header.bin;
-		$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' > ${NUWRITER_TARGET}/pack-sdcard.json); \
+		$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024))'")' > ${NUWRITER_TARGET}/pack-sdcard.json); \
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
 		rm -rf $(date "+%m%d-*") conv pack; \
@@ -260,7 +265,7 @@ IMAGE_CMD_sdcard()
         # 0x300000
         dd if=${BINARIES_DIR}/Image of=${SDCARD} conv=notrunc seek=6144 bs=512 &>${NULLDEV}
         # root fs
-        dd if=${BINARIES_DIR}/rootfs.ext4 of=${SDCARD} conv=notrunc,fsync seek=1 bs=$(($BOOT_SPACE_ALIGNED*1024+$IMAGE_ROOTFS_ALIGNMENT*1024)) &>${NULLDEV}
+        dd if=${BINARIES_DIR}/rootfs.ext4 of=${SDCARD} conv=notrunc,fsync seek=1 bs=$(($BOOT_SPACE_ALIGNED*1024)) &>${NULLDEV}
 }
 
 
@@ -316,6 +321,7 @@ uboot_cmd() {
 
 main()
 {
+	BOOT_SPACE=$(boot_space)
 	UBOOT_DTB_NAME=$(uboot_dtb_name)
 	MACHINE="$(dtb_list)"
 	IS_OPTEE=$(optee_image)
