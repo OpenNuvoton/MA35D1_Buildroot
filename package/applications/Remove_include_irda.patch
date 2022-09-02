@@ -1,0 +1,12 @@
+diff --git a/demos/irda/irda.c b/demos/irda/irda.c
+index 9a69a69..e5a880d 100644
+--- a/demos/irda/irda.c
++++ b/demos/irda/irda.c
+@@ -19,7 +19,6 @@
+ #include <net/if.h>
+ #include <sys/utsname.h>
+ #include <linux/types.h>
+-#include <linux/irda.h>
+ 
+ #ifndef N_IRDA
+ #define N_IRDA 11 

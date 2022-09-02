@@ -1,3 +1,7 @@
+menu "Applications"
+        source "package/applications/Config.in"
+endmenu
+
 menu "Target packages"
 
 	source "package/busybox/Config.in"

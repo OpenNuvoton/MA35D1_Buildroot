@@ -440,6 +440,9 @@ define LINUX_BUILD_CMDS
 	$(foreach dts,$(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH)), \
 		cp -f $(dts) $(LINUX_ARCH_PATH)/boot/dts/
 	)
+	if grep -q "CONFIG_ARCH_NUC980=y" $(@D)/.config; then  \
+		mkdir -p $(@D)/../image; \
+	fi
 	if grep -q "BR2_TARGET_OPTEE_OS=y" .config; then \
 		cat board/nuvoton/ma35d1/optee.config >> $(@D)/.config; \
 	fi
@@ -461,6 +464,11 @@ else
 # build process.
 define LINUX_INSTALL_IMAGE
 	$(INSTALL) -m 0644 -D $(LINUX_IMAGE_PATH) $(1)/$(notdir $(LINUX_IMAGE_NAME))
+
+	if grep -q "CONFIG_ARCH_NUC980=y" $(LINUX_DIR)/.config; then \
+		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/980image $(1)/Image; \
+		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/*.dtb $(1)/; \
+	fi
 endef
 endif
 
