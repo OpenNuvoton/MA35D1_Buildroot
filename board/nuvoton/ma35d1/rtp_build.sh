@@ -10,8 +10,8 @@ ECLIPSE_DIR=$2
 SOURCE_DIR=$3
 DEPLOY_DIR=$4
 
-PATH=$PATH:${GCC_DIR}/bin
-DISPLAY=":99"
+export PATH=$PATH:${GCC_DIR}/bin
+export DISPLAY=":99"
 
 ECLIPSE_PAR='-nosplash --launcher.suppressErrors -application org.eclipse.cdt.managedbuilder.core.headlessbuild -data Temp -cleanBuild all -import'
 
