@@ -104,3 +104,26 @@ You can also find us on #buildroot on OFTC IRC.
 
 If you would like to contribute patches, please read
 https://buildroot.org/manual.html#submitting-patches
+
+
+# NUVOTON NUC980 SERIES RELATED DESCRIPTION:
+============================================
+
+The following boards were test in this release:
+
+        - nuvoton_nuc980_defconfig
+        - nuvoton_nuc980_iot_defconfig
+	- nuvoton_nuc980_chili_defconfig
+	- nuvoton_nuc980_eth2uart_defconfig
+	- nuvoton_nuc980_lorag_defconfig
+
+1) For example, run 'make nuvoton_nuc980_iot_defconfig'
+2) select the target architecture and the packages you wish to compile
+3) run 'make'
+4) wait while it compiles
+5) find the kernel, dtb, bootloader, root filesystem, etc. in output/images
+
+You do not need to be root to build or run buildroot.  Have fun!
+
+If users need to modiy buildroot parameters, user can run 'make menuconfig'
+to modify buildroot parameters.
