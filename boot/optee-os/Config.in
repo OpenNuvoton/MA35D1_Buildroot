@@ -29,7 +29,23 @@ config BR2_TARGET_OPTEE_OS_CUSTOM_GIT
 	help
 	  Use a custom version fetched from a Git repository.
 
+config BR2_TARGET_OPTEE_OS_MA35D1_TARBALL
+        bool "MA35D1 tarball"
+        help
+          Use a custom version fetched from a tarball.
+
 endchoice
+
+if BR2_TARGET_OPTEE_OS_MA35D1_TARBALL
+
+config BR2_TARGET_OPTEE_OS_VERSION
+        string "Custom repository version"
+        default "master"
+        help
+          Revision to use in the typical format used by Git, i.e a
+          SHA1 or a tag.
+
+endif
 
 if BR2_TARGET_OPTEE_OS_CUSTOM_GIT
 

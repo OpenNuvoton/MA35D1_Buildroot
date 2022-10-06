@@ -10,6 +10,7 @@ NUWRITER_TARGET=${BINARIES_DIR}/${IMGDEPLOYDIR}/nuwriter
 IMAGE_BASENAME="core-image-buildroot"
 MACHINE=
 EXT2_SIZE=
+ENVOPT="-s 0x10000"
 SDCARD=${BINARIES_DIR}/${IMGDEPLOYDIR}/${IMAGE_BASENAME}-${MACHINE}.rootfs.sdcard
 
 # Boot partition size [in KiB]
@@ -121,6 +122,7 @@ IMAGE_CMD_nand() {
 	( \
 		cd ${BINARIES_DIR}; \
 		cp ${BINARIES_DIR}/uboot-env.bin ${BINARIES_DIR}/uboot-env.bin-nand; \
+		cp ${BINARIES_DIR}/uboot-env.bin ${BINARIES_DIR}/uboot-env.bin-ubinand; \
 		cp ${BINARIES_DIR}/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt-nand; \
 		${HOST_DIR}/sbin/ubinize ${UBINIZE_ARGS} -o ${BINARIES_DIR}/u-boot-env.ubi-nand ${PROJECT_DIR}/env/uEnv-nand-ubi.cfg \
 	)
@@ -311,12 +313,17 @@ uboot_cmd() {
 		sed -i "s/boot_targets=/boot_targets=mtd0 /1" ${BINARIES_DIR}/uboot-env.txt
 	fi
 
+	if echo $UBOOT_DTB_NAME | grep -q "nand"
+	then
+		sed -i "s/boot_targets=/boot_targets=nand0 /1" ${BINARIES_DIR}/uboot-env.txt
+	fi
+
 	if echo ${MACHINE} | grep -q "iot"
 	then
 		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
 	fi
 
-	${HOST_DIR}/bin/mkenvimage -s 0x10000 -o ${BINARIES_DIR}/uboot-env.bin ${BINARIES_DIR}/uboot-env.txt
+	${HOST_DIR}/bin/mkenvimage ${ENVOPT} -o ${BINARIES_DIR}/uboot-env.bin ${BINARIES_DIR}/uboot-env.txt
 }
 
 main()
@@ -341,6 +348,10 @@ main()
 	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 		ECDSA_KEY=$(sed -n -e 's/^BR2_TARGET_MA35D1_ECDSA_KEY=//p' ${BR2_CONFIG} | sed 's/\"//g')
 		AES_KEY=$(sed -n -e 's/^BR2_TARGET_MA35D1_AES_KEY=//p' ${BR2_CONFIG} | sed 's/\"//g')
+	fi
+
+	if grep -Eq "^CONFIG_SYS_REDUNDAND_ENVIRONMENT=y$" ${BR2_UBOOT_CONFIG}; then
+		ENVOPT="-r ${ENVOPT}"
 	fi
 
 	(cd ${BINARIES_DIR}/${IMGDEPLOYDIR};
