@@ -193,8 +193,8 @@ IMAGE_CMD_sdcard()
 	sudo ${HOST_DIR}/sbin/parted ${SDCARD} print
 
         # MBR table for nuwriter
-	dd if=/dev/zero of=${BINARIES_DIR}/MBR.scdard.bin bs=1 count=0 seek=512 &>${NULLDEV}
-	dd if=${SDCARD} of=${BINARIES_DIR}/MBR.scdard.bin conv=notrunc,fsync seek=0 count=1 bs=512 &>${NULLDEV}
+	dd if=/dev/zero of=${BINARIES_DIR}/MBR.sdcard.bin bs=1 count=0 seek=512 &>${NULLDEV}
+	dd if=${SDCARD} of=${BINARIES_DIR}/MBR.sdcard.bin conv=notrunc,fsync seek=0 count=1 bs=512 &>${NULLDEV}
 
 	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
 	( \
@@ -341,8 +341,8 @@ main()
 		rm ${NUWRITER_TARGET}/*
 	fi
 
-	if [ -f ${BINARIES_DIR}/${IMGDEPLOYDIR}/MBR.scdard.bin ]; then
-		rm ${BINARIES_DIR}/${IMGDEPLOYDIR}/MBR.scdard.bin
+	if [ -f ${BINARIES_DIR}/${IMGDEPLOYDIR}/MBR.sdcard.bin ]; then
+		rm ${BINARIES_DIR}/${IMGDEPLOYDIR}/MBR.sdcard.bin
 	fi
 
 	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
