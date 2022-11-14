@@ -51,6 +51,16 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_M4_URL
 
 endif
 
+choice
+        prompt "MA35D1 PMIC Select"
+config TFA_MA35D1_PMIC_0
+        bool "No PMIC"
+config TFA_MA35D1_PMIC_1
+        bool "DIALOG PMIC"
+config TFA_MA35D1_PMIC_2
+        bool "IP6103 PMIC"
+endchoice
+
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 	string
 	default "ma35d1-cpu800-wb-128m" if TFA_CPU800_WB128M

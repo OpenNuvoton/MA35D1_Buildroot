@@ -35,6 +35,10 @@ ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_DTC),y)
 ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-dtc
 endif
 
+ifeq ($(BR2_TARGET_MA35D1_SECURE_BOOT),y)
+ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-python3 host-python3-nuwriter host-jq host-m4-bsp
+endif
+
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_ARM32_TOOLCHAIN),y)
 ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-arm-gnu-a-toolchain
 endif
@@ -75,6 +79,9 @@ ARM_TRUSTED_FIRMWARE_MAKE_OPTS += \
 	BL32=$(BINARIES_DIR)/tee-header_v2.bin \
 	BL32_EXTRA1=$(BINARIES_DIR)/tee-pager_v2.bin \
 	BL32_EXTRA2=$(BINARIES_DIR)/tee-pageable_v2.bin
+ARM_TRUSTED_FIRMWARE_FIP_OPTS += \
+	--tos-fw $(BINARIES_DIR)/fip/enc_tee-header_v2.bin \
+	--tos-fw-extra1 $(BINARIES_DIR)/fip/enc_tee-pager_v2.bin
 ifeq ($(BR2_aarch64),y)
 ARM_TRUSTED_FIRMWARE_MAKE_OPTS += SPD=opteed
 endif
@@ -87,6 +94,7 @@ ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_UBOOT_AS_BL33),y)
 ARM_TRUSTED_FIRMWARE_UBOOT_BIN = $(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_UBOOT_BL33_IMAGE))
 ARM_TRUSTED_FIRMWARE_MAKE_OPTS += BL33=$(BINARIES_DIR)/$(ARM_TRUSTED_FIRMWARE_UBOOT_BIN)
 ARM_TRUSTED_FIRMWARE_DEPENDENCIES += uboot
+ARM_TRUSTED_FIRMWARE_FIP_OPTS += --nt-fw $(BINARIES_DIR)/fip/enc_u-boot.bin
 endif
 
 ifeq ($(BR2_TARGET_VEXPRESS_FIRMWARE),y)
@@ -102,6 +110,7 @@ endif
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4),y)
 ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-m4-bsp
 ARM_TRUSTED_FIRMWARE_MAKE_OPTS += SCP_BL2=$(BINARIES_DIR)/$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_M4_URL) NEED_SCP_BL2=yes
+ARM_TRUSTED_FIRMWARE_FIP_OPTS += --scp_bl2 ${BINARIES_DIR}/fip/enc_rtp.bin
 endif
 
 ifeq ($(BR2_TARGET_MV_DDR_MARVELL),y)
@@ -130,6 +139,7 @@ endif
 
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_BL31),y)
 ARM_TRUSTED_FIRMWARE_MAKE_TARGETS += bl31
+ARM_TRUSTED_FIRMWARE_FIP_OPTS += --soc-fw $(BINARIES_DIR)/fip/enc_bl31.bin
 endif
 
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_BL31_UBOOT),y)
@@ -168,6 +178,9 @@ define ARM_TRUSTED_FIRMWARE_BL2_DTB_INSTALL
 endef
 endif
 
+ifeq ($(BR2_TARGET_MA35D1_SECURE_BOOT),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += FIP_DE_AES=1
+endif
 
 ARM_TRUSTED_FIRMWARE_MAKE_TARGETS += \
 	$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_ADDITIONAL_TARGETS))
@@ -214,11 +227,68 @@ endif
 endif
 endif
 
+ifeq ($(TFA_MA35D1_PMIC_0),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D1_PMIC=0
+else ifeq ($(TFA_MA35D1_PMIC_1),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D1_PMIC=1
+else ifeq ($(TFA_MA35D1_PMIC_2),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D1_PMIC=2
+endif
+
+define ARM_TRUSTED_FIRMWARE_BUILD_FIP
+	if [ "${BR2_TARGET_MA35D1_SECURE_BOOT}" == "y" ]; then \
+		cd ${BINARIES_DIR}; \
+		if [ -d ${BINARIES_DIR}/fip ]; then \
+			rm ${BINARIES_DIR}/fip -rf; \
+		fi; \
+		mkdir ${BINARIES_DIR}/fip; \
+		cat ${TOPDIR}/board/nuvoton/ma35d1/nuwriter/en_fip.json | \
+		${HOST_DIR}/bin/jq -r ".header.aeskey = \"${BR2_TARGET_MA35D1_AES_KEY}\"" | \
+		${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${BR2_TARGET_MA35D1_ECDSA_KEY}\"" \
+		> ${BINARIES_DIR}/fip/en_fip.json; \
+		if [ "${BR2_TARGET_ARM_TRUSTED_FIRMWARE_BL31}" == "y" ]; then \
+			cp ${ARM_TRUSTED_FIRMWARE_IMG_DIR}/bl31.bin ${BINARIES_DIR}/fip/enc.bin; \
+			${HOST_DIR}/bin/python3 ${HOST_DIR}/bin/nuwriter.py -c ${BINARIES_DIR}/fip/en_fip.json>/dev/null; \
+			cat conv/enc_enc.bin conv/header.bin >${BINARIES_DIR}/fip/enc_bl31.bin; \
+			rm -rf `date "+%m%d-*"` conv pack; \
+		fi; \
+		if [ "${BR2_TARGET_ARM_TRUSTED_FIRMWARE_UBOOT_AS_BL33}" == "y" ]; then \
+			cp ${BINARIES_DIR}/${BR2_TARGET_ARM_TRUSTED_FIRMWARE_UBOOT_BL33_IMAGE} ${BINARIES_DIR}/fip/enc.bin; \
+			${HOST_DIR}/bin/python3 ${HOST_DIR}/bin/nuwriter.py -c ${BINARIES_DIR}/fip/en_fip.json>/dev/null; \
+			cat conv/enc_enc.bin conv/header.bin >${BINARIES_DIR}/fip/enc_u-boot.bin; \
+			rm -rf `date "+%m%d-*"` conv pack; \
+		fi; \
+		if [ "${BR2_TARGET_ARM_TRUSTED_FIRMWARE_BL32_OPTEE}" == "y" ]; then \
+			cp $(BINARIES_DIR)/tee-header_v2.bin ${BINARIES_DIR}/fip/enc.bin; \
+			${HOST_DIR}/bin/python3 ${HOST_DIR}/bin/nuwriter.py -c ${BINARIES_DIR}/fip/en_fip.json; \
+			cat conv/enc_enc.bin conv/header.bin >${BINARIES_DIR}/fip/enc_tee-header_v2.bin; \
+			rm -rf `date "+%m%d-*"` conv pack; \
+			cp $(BINARIES_DIR)/tee-pager_v2.bin ${BINARIES_DIR}/fip/enc.bin; \
+			${HOST_DIR}/bin/python3 ${HOST_DIR}/bin/nuwriter.py -c ${BINARIES_DIR}/fip/en_fip.json>/dev/null; \
+			cat conv/enc_enc.bin conv/header.bin >${BINARIES_DIR}/fip/enc_tee-pager_v2.bin; \
+			rm -rf `date "+%m%d-*"` conv pack; \
+		fi; \
+		if [ "${BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4}" == "y" ]; then \
+			cp $(BINARIES_DIR)/$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_M4_URL) ${BINARIES_DIR}/fip/enc.bin; \
+			${HOST_DIR}/bin/python3 ${HOST_DIR}/bin/nuwriter.py -c ${BINARIES_DIR}/fip/en_fip.json>/dev/null; \
+			cat conv/enc_enc.bin conv/header.bin >${BINARIES_DIR}/fip/enc_rtp.bin; \
+			rm -rf `date "+%m%d-*"` conv pack; \
+		fi; \
+		rm ${BINARIES_DIR}/fip/enc.bin ${BINARIES_DIR}/fip/en_fip.json; \
+		if test -f $(@D)/tools/fiptool/fiptool; then \
+			$(@D)/tools/fiptool/fiptool create \
+			${ARM_TRUSTED_FIRMWARE_FIP_OPTS} \
+			$(ARM_TRUSTED_FIRMWARE_IMG_DIR)/fip.bin; \
+		fi; \
+	fi
+endef
+
 define ARM_TRUSTED_FIRMWARE_BUILD_CMDS
 	$(ARM_TRUSTED_FIRMWARE_BUILD_FIPTOOL)
 	$(ARM_TRUSTED_FIRMWARE_MAKE_ENV) $(MAKE) -C $(@D) \
 		$(ARM_TRUSTED_FIRMWARE_MAKE_OPTS) \
 		$(ARM_TRUSTED_FIRMWARE_MAKE_TARGETS)
+	$(ARM_TRUSTED_FIRMWARE_BUILD_FIP)
 	$(ARM_TRUSTED_FIRMWARE_BL31_UBOOT_BUILD)
 endef
 
