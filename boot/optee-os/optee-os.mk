@@ -50,6 +50,11 @@ OPTEE_OS_MAKE_OPTS += \
 	CFG_ARM32_core=y
 endif
 
+ifneq ($(call findstring,custom,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
+SBASE0=$(shell expr $(shell printf "%d\n" ${TFA_CUSTOM_DDR_SIZE}) \+ $(shell printf "%d\n" 0x7F800000))
+SBASE1=$(shell expr $(shell printf "%d\n" ${TFA_CUSTOM_DDR_SIZE}) \+ $(shell printf "%d\n" 0x7FF00000))
+endif
+
 # Get mandatory PLAFORM and optional PLATFORM_FLAVOR and additional
 # variables
 OPTEE_OS_MAKE_OPTS += PLATFORM=$(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM))
@@ -68,6 +73,8 @@ else ifneq ($(call findstring,256,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_N
 	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=0x8F800000 CFG_SHMEM_START=0x8FF00000
 else ifneq ($(call findstring,512,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
 	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=0x9F800000 CFG_SHMEM_START=0x9FF00000
+else ifneq ($(call findstring,custom,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
+	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=$(SBASE0) CFG_SHMEM_START=$(SBASE1)
 else
 	OPTEE_OS_MAKE_OPTS += CFG_TZDRAM_START=0xAF800000 CFG_SHMEM_START=0xAFF00000
 endif

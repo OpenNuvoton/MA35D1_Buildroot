@@ -10,32 +10,6 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE
 
 if BR2_TARGET_ARM_TRUSTED_FIRMWARE
 
-choice
-	prompt "In-tree Device Tree Source file names"
-config TFA_CPU800_WB128M
-	bool "ma35d1-cpu800-wb-128m"
-config TFA_CPU800_WB256M
-	bool "ma35d1-cpu800-wb-256m"
-config TFA_CPU800_WB512M
-	bool "ma35d1-cpu800-wb-512m"
-config TFA_CPU1G_WB256M
-	bool "ma35d1-cpu1g-wb-256m"
-config TFA_CPU1G_WB512M
-	bool "ma35d1-cpu1g-wb-512m"
-config TFA_CPU800_ZT1G
-	bool "ma35d1-cpu800-zt-1g"
-config TFA_CPU800_MC1G
-	bool "ma35d1-cpu800-mc-1g"
-config TFA_CPU800_ISSI1G
-	bool "ma35d1-cpu800-issi-1g"
-config TFA_CPU1G_WB128M
-	bool "ma35d1-cpu1g-zt-1g"
-config TFA_CPU1G_MC1G
-	bool "ma35d1-cpu1g-mc-1g"
-config TFA_CPU1G_ISSI1G
-	bool "ma35d1-cpu1g-issi-1g"
-endchoice
-
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4
 	bool "Add RTP M4 into FIP Image"
 	help
@@ -59,6 +33,30 @@ config TFA_MA35D1_PMIC_1
         bool "DIALOG PMIC"
 config TFA_MA35D1_PMIC_2
         bool "IP6103 PMIC"
+config TFA_MA35D1_PMIC_3
+        bool "APW7704F PMIC"
+endchoice
+
+choice
+        prompt "In-tree Device Tree Source file names"
+config TFA_CPU800_WB128M
+        bool "ma35d1-cpu800-wb-128m"
+config TFA_CPU800_WB256M
+        bool "ma35d1-cpu800-wb-256m"
+config TFA_CPU800_WB512M
+        bool "ma35d1-cpu800-wb-512m"
+config TFA_CPU1G_WB256M
+        bool "ma35d1-cpu1g-wb-256m"
+config TFA_CPU1G_WB512M
+        bool "ma35d1-cpu1g-wb-512m"
+config TFA_CPU800_MC1G
+        bool "ma35d1-cpu800-mc-1g"
+config TFA_CPU1G_MC1G
+        bool "ma35d1-cpu1g-mc-1g"
+config TFA_CPU800_CUSTOM_DDR
+        bool "ma35d1-cpu800-custom-ddr"
+config TFA_CPU1G_CUSTOM_DDR
+        bool "ma35d1-cpu1g-custom-ddr"
 endchoice
 
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
@@ -68,12 +66,10 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 	default "ma35d1-cpu800-wb-512m" if TFA_CPU800_WB512M
 	default "ma35d1-cpu1g-wb-256m" if TFA_CPU1G_WB256M
 	default "ma35d1-cpu1g-wb-512m" if TFA_CPU1G_WB512M
-	default "ma35d1-cpu800-zt-1g" if TFA_CPU800_ZT1G
 	default "ma35d1-cpu800-mc-1g" if TFA_CPU800_MC1G
-	default "ma35d1-cpu800-issi-1g"  if TFA_CPU800_ISSI1G
-	default "ma35d1-cpu1g-zt-1g" if TFA_CPU1G_WB128M
 	default "ma35d1-cpu1g-mc-1g" if TFA_CPU1G_MC1G
-	default "ma35d1-cpu1g-issi-1g" if TFA_CPU1G_ISSI1G
+	default "ma35d1-cpu800-custom-ddr" if TFA_CPU800_CUSTOM_DDR
+        default "ma35d1-cpu1g-custom-ddr" if TFA_CPU1G_CUSTOM_DDR
 	help
 	  Name of in-tree device tree source file, without
 	  the trailing .dts. You can provide a list of
@@ -86,12 +82,20 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
 		- ma35d1-cpu1g-wb-256m
 		- ma35d1-cpu1g-wb-512m
 
-		- ma35d1-cpu800-zt-1g
 		- ma35d1-cpu800-mc-1g
-		- ma35d1-cpu800-issi-1g
-		- ma35d1-cpu1g-zt-1g
 		- ma35d1-cpu1g-mc-1g
-		- ma35d1-cpu1g-issi-1g
+		- ma35d1-cpu800-custom-ddr
+		- ma35d1-cpu1g-custom-ddr
+
+if (TFA_CPU800_CUSTOM_DDR || TFA_CPU1G_CUSTOM_DDR)
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR
+	string "Custom DDR header file in board/nuvoton/ma35d1/ddr"
+	default "custom_ddr.h"
+
+config TFA_CUSTOM_DDR_SIZE
+	string "Custom DDR size"
+	default "0x10000000"
+endif
 
 choice
 	prompt "ATF Version"
