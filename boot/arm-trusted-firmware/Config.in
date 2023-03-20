@@ -37,6 +37,17 @@ config TFA_MA35D1_PMIC_3
         bool "APW7704F PMIC"
 endchoice
 
+if !TFA_MA35D1_PMIC_0
+config TFA_MA35D1_CPU_CORE_POWER
+        int "MA35D1 CPU Core Power"
+        default 125
+        help
+          The cpu core power voltage
+          decimal integer value.
+          125 = 1.25V, 120 = 1.20V,
+          1xx = 1.xxV, etc.
+endif
+
 choice
         prompt "In-tree Device Tree Source file names"
 config TFA_CPU800_WB128M
