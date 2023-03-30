@@ -74,7 +74,7 @@ ARM_TRUSTED_FIRMWARE_MAKE_OPTS += ARCH=aarch64
 endif
 
 ifneq ($(call findstring,custom,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
-DSIZE=$(shell expr $(shell printf "%d\n" $(TFA_CUSTOM_DDR_SIZE)) - $(shell printf "%d\n" 0x80000))
+DSIZE=$(shell expr $(shell printf "%d\n" $(TFA_CUSTOM_DDR_SIZE)) - $(shell printf "%d\n" 0x800000))
 SBASE=$(shell expr $(shell printf "%d\n" $(TFA_CUSTOM_DDR_SIZE)) + $(shell printf "%d\n" 0x7F800000))
 endif
 
