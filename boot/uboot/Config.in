@@ -126,7 +126,25 @@ config BR2_TARGET_UBOOT_BOARD_DEFCONFIG
 	      ma35d1_sdcard0
 	      ma35d1_sdcard1
 	      ma35d1_spinand
+	      ma35d1_spinor
 	      ma35d1_nand
+
+config BR2_MA35D1_RESIZE_SD_MAX
+	bool "Auto resize sdcard to Max."
+	help
+	  Run script to auto resize sdcard to Max.
+
+if BR2_MA35D1_RESIZE_SD_MAX
+
+config BR2_MA35D1_RESIZE_DISK_DRIVE
+	string "Disk Drive"
+	default "/dev/mmcblk0"
+
+config BR2_MA35D1_RESIZE_DISK_NUM
+	string "Disk Number"
+	default "p1"
+
+endif
 
 config BR2_TARGET_UBOOT_CUSTOM_CONFIG_FILE
 	string "Configuration file path"
