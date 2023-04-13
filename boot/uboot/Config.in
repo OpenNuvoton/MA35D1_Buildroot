@@ -126,7 +126,6 @@ config BR2_TARGET_UBOOT_BOARD_DEFCONFIG
 	      ma35d1_sdcard0
 	      ma35d1_sdcard1
 	      ma35d1_spinand
-	      ma35d1_spinor
 	      ma35d1_nand
 
 config BR2_MA35D1_RESIZE_SD_MAX
