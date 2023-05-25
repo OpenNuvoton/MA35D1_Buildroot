@@ -380,6 +380,7 @@ define LINUX_KCONFIG_FIXUP_CMDS
 		$(call KCONFIG_ENABLE_OPT,CONFIG_LOGO)
 		$(call KCONFIG_ENABLE_OPT,CONFIG_LOGO_LINUX_CLUT224))
 	$(call KCONFIG_DISABLE_OPT,CONFIG_GCC_PLUGINS)
+
 	$(PACKAGES_LINUX_CONFIG_FIXUPS)
 endef
 
@@ -391,6 +392,12 @@ LINUX_DEPENDENCIES += host-bison host-flex
 
 ifeq ($(BR2_LINUX_KERNEL_DTB_IS_SELF_BUILT),)
 define LINUX_BUILD_DTB
+	$(TOPDIR)/linux/dts-reserve \
+		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/ma35d1.dtsi
+	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35),$(TOPDIR)/linux/dts-reserve \
+		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/ma35d1.dtsi \
+		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE)) \
+		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_LEN)))
 	$(LINUX_MAKE_ENV) $(MAKE) $(LINUX_MAKE_FLAGS) -C $(@D) $(LINUX_DTBS)
 endef
 ifeq ($(BR2_LINUX_KERNEL_APPENDED_DTB),)
@@ -444,6 +451,9 @@ endif
 # The call to disable gcc-plugins is a stop-gap measure:
 #   http://lists.busybox.net/pipermail/buildroot/2020-May/282727.html
 define LINUX_BUILD_CMDS
+	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35), \
+	$(call KCONFIG_ENABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED), \
+	$(call KCONFIG_DISABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED))
 	$(call KCONFIG_DISABLE_OPT,CONFIG_GCC_PLUGINS)
 	$(foreach dts,$(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_DTS_PATH)), \
 		cp -f $(dts) $(LINUX_ARCH_PATH)/boot/dts/

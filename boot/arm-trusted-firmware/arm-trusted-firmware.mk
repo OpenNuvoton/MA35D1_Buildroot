@@ -112,9 +112,9 @@ ARM_TRUSTED_FIRMWARE_MAKE_OPTS += SCP_BL2=$(BINARIES_DIR)/scp-fw.bin
 ARM_TRUSTED_FIRMWARE_DEPENDENCIES += binaries-marvell
 endif
 
-ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4),y)
+ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SCP_BL2),y)
 ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-m4-bsp
-ARM_TRUSTED_FIRMWARE_MAKE_OPTS += SCP_BL2=$(BINARIES_DIR)/$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_M4_URL) NEED_SCP_BL2=yes
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += SCP_BL2=$(BINARIES_DIR)/$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_SCP_URL) NEED_SCP_BL2=yes
 ARM_TRUSTED_FIRMWARE_FIP_OPTS += --scp_bl2 ${BINARIES_DIR}/fip/enc_rtp.bin
 endif
 
@@ -144,6 +144,10 @@ define ARM_TRUSTED_FIRMWARE_BUILD_FIPTOOL
 		cp $(BASE_DIR)/../board/nuvoton/ma35d1/ddr/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR)) $(@D)/plat/$(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM))/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM))/include/custom_ddr.h; \
 	fi
 endef
+endif
+
+ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D1_SCPBL2_BASE=$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE))
 endif
 
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_BL31),y)
@@ -280,8 +284,8 @@ define ARM_TRUSTED_FIRMWARE_BUILD_FIP
 			cat conv/enc_enc.bin conv/header.bin >${BINARIES_DIR}/fip/enc_tee-pager_v2.bin; \
 			rm -rf `date "+%m%d-*"` conv pack; \
 		fi; \
-		if [ "${BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4}" == "y" ]; then \
-			cp $(BINARIES_DIR)/$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_M4_URL) ${BINARIES_DIR}/fip/enc.bin; \
+		if [ "${BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SCP_BL2}" == "y" ]; then \
+			cp $(BINARIES_DIR)/$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_SCP_URL) ${BINARIES_DIR}/fip/enc.bin; \
 			${HOST_DIR}/bin/python3 ${HOST_DIR}/bin/nuwriter.py -c ${BINARIES_DIR}/fip/en_fip.json>/dev/null; \
 			cat conv/enc_enc.bin conv/header.bin >${BINARIES_DIR}/fip/enc_rtp.bin; \
 			rm -rf `date "+%m%d-*"` conv pack; \
