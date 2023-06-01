@@ -17,14 +17,6 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SCP_BL2
 
 if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SCP_BL2
 
-config BR2_TARGET_ARM_TRUSTED_FIRMWARE_SCP_URL
-        string "SCP_BL2 binary file names"
-        default "RTP-BSP/Template.bin"
-        help
-          Name of binary file.
-
-endif
-
 choice
 	prompt "Load Image into FIP Image"
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4
@@ -40,6 +32,14 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35
           Add A35 binary file into FIP Image
 
 endchoice
+
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_SCP_URL
+	string "SCP_BL2 binary file names"
+	default "RTP-BSP/Template.bin" if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4
+	default "AmpCore1.bin" if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35
+	help
+	  Name of binary file.
+endif
 
 if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35
 
