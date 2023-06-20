@@ -311,9 +311,7 @@ uboot_cmd() {
 	if echo $UBOOT_DTB_NAME | grep -q "spinand"
 	then
 		sed -i "s/boot_targets=/boot_targets=mtd0 /1" ${BINARIES_DIR}/uboot-env.txt
-	fi
-
-	if echo $UBOOT_DTB_NAME | grep -q "nand"
+	elif echo $UBOOT_DTB_NAME | grep -q "nand"
 	then
 		sed -i "s/boot_targets=/boot_targets=nand0 /1" ${BINARIES_DIR}/uboot-env.txt
 	fi
