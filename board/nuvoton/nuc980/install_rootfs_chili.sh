@@ -1,5 +1,5 @@
 #!/bin/sh
 
 rm output/target/etc/resolv.conf
-cp -af board/nuvoton/nuc980/rootfs-chili/* output/target/
+cp -af -r board/nuvoton/nuc980/rootfs-chili/ output/target/
 
