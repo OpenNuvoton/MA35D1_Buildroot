@@ -398,6 +398,12 @@ define LINUX_BUILD_DTB
 		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/ma35d1.dtsi \
 		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE)) \
 		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_LEN)))
+	$(TOPDIR)/linux/dts-reserve \
+		 $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))
+	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35),$(TOPDIR)/linux/dts-reserve \
+		$(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME)) \
+		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE)) \
+		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_LEN)))
 	$(LINUX_MAKE_ENV) $(MAKE) $(LINUX_MAKE_FLAGS) -C $(@D) $(LINUX_DTBS)
 endef
 ifeq ($(BR2_LINUX_KERNEL_APPENDED_DTB),)

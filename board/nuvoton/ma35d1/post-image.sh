@@ -115,6 +115,57 @@ IMAGE_CMD_spinand() {
 		)
 		fi
 	fi
+}
+
+IMAGE_CMD_spinor() {
+
+	( \
+		cd ${BINARIES_DIR}; \
+		cp ${BINARIES_DIR}/uboot-env.bin ${BINARIES_DIR}/uboot-env.bin-spinor; \
+		cp ${BINARIES_DIR}/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt-spinor; \
+	)
+
+	if grep -Eq "^BR2_TARGET_MA35D1_SECURE_BOOT=y$" ${BR2_CONFIG}; then
+	( \
+		cd ${BINARIES_DIR}; \
+		cp ${MACHINE}.dtb Image.dtb; \
+		cp fip.bin fip.bin-spinor; \
+		$(cat ${NUWRITER_DIR}/header-spinor.json | ${HOST_DIR}/bin/jq -r ".header.secureboot = \"yes\"" | \
+		${HOST_DIR}/bin/jq -r ".header.aeskey = \"${AES_KEY}\"" | \
+		${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${ECDSA_KEY}\"" \
+		> ${NUWRITER_TARGET}/header-spinor.json); \
+		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-spinor.json; \
+		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-enc-spinor.bin; \
+		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-enc-spinor.bin header.bin;
+		cp conv/enc_bl2.dtb ${NUWRITER_TARGET}/enc_bl2.dtb; \
+		cp conv/enc_bl2.bin ${NUWRITER_TARGET}/enc_bl2.bin; \
+		echo "{\""publicx"\": \""$(head -6 conv/header_key.txt | tail +6)"\", \
+		\""publicy"\": \""$(head -7 conv/header_key.txt | tail +7)"\", \
+		\""aeskey"\": \""$(head -2 conv/header_key.txt | tail +2)"\"}" | \
+		${HOST_DIR}/bin/jq  > ${NUWRITER_TARGET}/otp_key.json; \
+		$(cat ${NUWRITER_DIR}/pack-spinor.json | \
+		${HOST_DIR}/bin/jq 'setpath(["image",1,"file"];"nuwriter/enc_bl2.dtb")' | \
+		${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.bin")' \
+		> ${NUWRITER_TARGET}/pack-spinor.json); \
+		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinor.json; \
+		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-spinor.bin; \
+		rm -rf $(date "+%m%d-*") conv pack; \
+	)
+	else
+	( \
+		cd ${BINARIES_DIR}; \
+		cp ${MACHINE}.dtb Image.dtb; \
+		cp fip.bin fip.bin-spinor; \
+		cp ${NUWRITER_DIR}/header-spinor.json ${NUWRITER_TARGET}/header-spinor.json
+		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinor.json; \
+		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinor.bin; \
+		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-spinor.bin header.bin;
+		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-spinor.json; \
+		cp ${NUWRITER_DIR}/pack-spinor.json ${NUWRITER_TARGET}/pack-spinor.json;
+		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-spinor.bin; \
+		rm -rf $(date "+%m%d-*") conv pack; \
+	)
+	fi
 } 
 
 IMAGE_CMD_nand() {
@@ -186,11 +237,11 @@ IMAGE_CMD_sdcard()
 	
         # Initialize a sparse file
         dd if=/dev/zero of=${SDCARD} bs=1 count=0 seek=$((1024*$SDCARD_SIZE)) &>${NULLDEV}
-	sudo ${HOST_DIR}/sbin/parted ${SDCARD} -s mklabel msdos
-	sudo ${HOST_DIR}/sbin/parted ${SDCARD} -s unit KiB mkpart primary \
+	${HOST_DIR}/bin/fakeroot -u ${HOST_DIR}/sbin/parted ${SDCARD} -s mklabel msdos
+	${HOST_DIR}/bin/fakeroot -u ${HOST_DIR}/sbin/parted ${SDCARD} -s unit KiB mkpart primary \
 		$(($BOOT_SPACE_ALIGNED)) \
         	$(($BOOT_SPACE_ALIGNED+$IMAGE_ROOTFS_ALIGNMENT+$EXT2_SIZE))
-	sudo ${HOST_DIR}/sbin/parted ${SDCARD} print
+	${HOST_DIR}/bin/fakeroot -u ${HOST_DIR}/sbin/parted ${SDCARD} print
 
         # MBR table for nuwriter
 	dd if=/dev/zero of=${BINARIES_DIR}/MBR.sdcard.bin bs=1 count=0 seek=512 &>${NULLDEV}
@@ -316,6 +367,11 @@ uboot_cmd() {
 		sed -i "s/boot_targets=/boot_targets=nand0 /1" ${BINARIES_DIR}/uboot-env.txt
 	fi
 
+	if echo $UBOOT_DTB_NAME | grep -q "spinor"
+	then
+		sed -i "s/boot_targets=/boot_targets=spinor0 /1" ${BINARIES_DIR}/uboot-env.txt
+	fi
+
 	if echo ${MACHINE} | grep -q "iot"
 	then
 		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
@@ -356,12 +412,16 @@ main()
 	rm fip.bin-* -f;
 	rm header-${IMAGE_BASENAME}*.bin pack-${IMAGE_BASENAME}*.bin ${IMAGE_BASENAME}*.sdcard -rf;)
 	uboot_cmd
+
 	if [[ $(echo $UBOOT_DTB_NAME | grep "spinand") != "" ]]
 	then
 		IMAGE_CMD_spinand
 	elif [[ $(echo $UBOOT_DTB_NAME | grep "nand") != "" ]]
 	then
 		IMAGE_CMD_nand
+	elif [[ $(echo $UBOOT_DTB_NAME | grep "spinor") != "" ]]
+	then
+		IMAGE_CMD_spinor
 	else
 		IMAGE_CMD_sdcard
 	fi

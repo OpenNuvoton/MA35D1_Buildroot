@@ -84,10 +84,18 @@ config TFA_CPU800_WB256M
         bool "ma35d1-cpu800-wb-256m"
 config TFA_CPU800_WB512M
         bool "ma35d1-cpu800-wb-512m"
+config TFA_CPU800_WB1G
+        bool "ma35d1-cpu800-wb-1g"
+config TFA_CPU800_WB2G
+        bool "ma35d1-cpu800-wb-2g"
 config TFA_CPU1G_WB256M
         bool "ma35d1-cpu1g-wb-256m"
 config TFA_CPU1G_WB512M
         bool "ma35d1-cpu1g-wb-512m"
+config TFA_CPU1G_WB1G
+        bool "ma35d1-cpu1g-wb-1g"
+config TFA_CPU1G_WB2G
+        bool "ma35d1-cpu1g-wb-2g"
 config TFA_CPU800_MC1G
         bool "ma35d1-cpu800-mc-1g"
 config TFA_CPU1G_MC1G
