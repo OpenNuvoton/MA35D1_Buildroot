@@ -467,6 +467,9 @@ define LINUX_BUILD_CMDS
 	if grep -q "CONFIG_ARCH_NUC980=y" $(@D)/.config; then  \
 		mkdir -p $(@D)/../image; \
 	fi
+	if grep -q "CONFIG_ARCH_NUC970=y" $(@D)/.config; then  \
+		mkdir -p $(@D)/../image; \
+	fi
 	if grep -q "BR2_TARGET_OPTEE_OS=y" .config; then \
 		cat board/nuvoton/ma35d1/optee.config >> $(@D)/.config; \
 	fi
@@ -491,6 +494,10 @@ define LINUX_INSTALL_IMAGE
 
 	if grep -q "CONFIG_ARCH_NUC980=y" $(LINUX_DIR)/.config; then \
 		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/980image $(1)/Image; \
+		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/*.dtb $(1)/; \
+	fi
+	if grep -q "CONFIG_ARCH_NUC970=y" $(LINUX_DIR)/.config; then \
+		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/970image $(1)/Image; \
 		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/*.dtb $(1)/; \
 	fi
 endef
