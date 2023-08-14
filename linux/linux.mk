@@ -491,14 +491,17 @@ else
 # build process.
 define LINUX_INSTALL_IMAGE
 	$(INSTALL) -m 0644 -D $(LINUX_IMAGE_PATH) $(1)/$(notdir $(LINUX_IMAGE_NAME))
-
 	if grep -q "CONFIG_ARCH_NUC980=y" $(LINUX_DIR)/.config; then \
-		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/980image $(1)/Image; \
+		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/980image $(1)/; \
 		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/*.dtb $(1)/; \
 	fi
 	if grep -q "CONFIG_ARCH_NUC970=y" $(LINUX_DIR)/.config; then \
-		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/970image $(1)/Image; \
-		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/*.dtb $(1)/; \
+	$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/*.dtb $(1)/; \
+	if grep -q "CONFIG_CPU_N9H30=y" $(LINUX_DIR)/.config; then \
+		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/n9h30image $(1)/; \
+	else \
+		$(INSTALL) -m 0644 -D $(LINUX_DIR)/../image/970image $(1)/; \
+	fi \
 	fi
 endef
 endif
