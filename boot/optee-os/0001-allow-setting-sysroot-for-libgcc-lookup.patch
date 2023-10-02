@@ -1,0 +1,25 @@
+From 25249e178aca6d3d08db335c7afbf02cbaa648a0 Mon Sep 17 00:00:00 2001
+From: schung <schung@nuvoton.com>
+Date: Thu, 12 Nov 2020 09:01:12 +0800
+Subject: [PATCH] allow-setting-sysroot-for-libgcc-lookup
+
+---
+ mk/gcc.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/mk/gcc.mk b/mk/gcc.mk
+index c53a23b..c516c73 100644
+--- a/mk/gcc.mk
++++ b/mk/gcc.mk
+@@ -12,7 +12,7 @@ nostdinc$(sm)	:= -nostdinc -isystem $(shell $(CC$(sm)) \
+ 			-print-file-name=include 2> /dev/null)
+ 
+ # Get location of libgcc from gcc
+-libgcc$(sm)  	:= $(shell $(CC$(sm)) $(CFLAGS$(arch-bits-$(sm))) \
++libgcc$(sm)  	:= $(shell $(CC$(sm)) $(LIBGCC_LOCATE_CFLAGS) $(CFLAGS$(arch-bits-$(sm))) $(comp-cflags$(sm)) \
+ 			-print-libgcc-file-name 2> /dev/null)
+ 
+ # Define these to something to discover accidental use
+-- 
+2.0.3
+
