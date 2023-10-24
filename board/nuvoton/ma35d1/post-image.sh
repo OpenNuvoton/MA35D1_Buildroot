@@ -63,6 +63,15 @@ boot_space()
 	echo $(sed -n -e 's/^BR2_TARGET_MA35D1_BOOT_SPACE=/ /p' ${BR2_CONFIG} | sed 's/M/ /g' | sed 's/\"/ /g' | sed '/^$/d')
 }
 
+ddr_size()
+{
+	if grep -Eq "^TFA_CPU800_CUSTOM_DDR=y" ${BR2_CONFIG}; then
+		echo $(sed -n -e 's/^TFA_CUSTOM_DDR_SIZE=/ /p' ${BR2_CONFIG} | sed 's/M/ /g' | sed 's/\"/ /g' | sed '/^$/d')
+	else
+		echo "0x8000000"
+	fi
+}
+
 IMAGE_CMD_spinand() {
 
 	( \
@@ -323,8 +332,22 @@ IMAGE_CMD_sdcard()
 
 
 uboot_cmd() {
+	DDR_SIZE=$(ddr_size)
+	DDR_SIZE=$(($DDR_SIZE/1024/1024))
 	cp ${PROJECT_DIR}/uboot-env.txt ${BINARIES_DIR}/uboot-env.txt
-	if echo ${MACHINE} | grep -q "256"
+	if grep -Eq "^TFA_CPU800_CUSTOM_DDR=y$" ${BR2_CONFIG}; then
+			if [[ $IS_OPTEE == "yes" ]]
+			then
+				DDR_SIZE=$(($DDR_SIZE-8))
+			fi
+			sed -i "s/kernelmem=256M/kernelmem=$DDR_SIZE\M/1" ${BINARIES_DIR}/uboot-env.txt
+	elif grep -Eq "^TFA_CPU1G_CUSTOM_DDR=y$" ${BR2_CONFIG}; then
+			if [[ $IS_OPTEE == "yes" ]]
+			then
+				DDR_SIZE=$(($DDR_SIZE-8))
+			fi
+			sed -i "s/kernelmem=256M/kernelmem=$DDR_SIZE\M/1" ${BINARIES_DIR}/uboot-env.txt
+	elif echo ${MACHINE} | grep -q "256"
 	then	
 		if [[ $IS_OPTEE == "yes" ]] 
 		then
@@ -351,6 +374,13 @@ uboot_cmd() {
 		if [[ $IS_OPTEE == "yes" ]]
 		then
 			sed -i "s/kernelmem=1024M/kernelmem=1016M/1" ${BINARIES_DIR}/uboot-env.txt
+		fi
+	elif echo ${MACHINE} | grep -q "2g"
+	then
+		sed -i "s/kernelmem=256M/kernelmem=2048M/1" ${BINARIES_DIR}/uboot-env.txt
+		if [[ $IS_OPTEE == "yes" ]]
+		then
+			sed -i "s/kernelmem=1024M/kernelmem=2040M/1" ${BINARIES_DIR}/uboot-env.txt
 		fi
 	fi
 
