@@ -1,0 +1,35 @@
+{
+    "header":
+    {
+        "version": "0x20210107",
+        "spiinfo":
+        {
+            "pagesize": "2048",
+            "sparearea": "64",
+            "pageperblk": "64",
+            "quadread": "0x6B",
+            "readsts": "0x05",
+            "writests": "0x01",
+            "stsvalue": "0x02",
+            "dummy1": "0",
+            "dummy2": "1",
+            "suspintvl": "1"
+        },
+        "secureboot": "yes",
+        "entrypoint": "0x28000000",
+        "aeskey" : "0A0BC81E5AFBF836C5E0CFBEA12C1E269A2EBC3B0B6EC39EEE1C7142F760EBC4",
+        "ecdsakey": "5E76953BF598581F925B7995157844747FABE669ABF000345E0EE21B63624D59",
+        "image":
+        [
+            {
+              "offset": "0x20000",
+              "loadaddr": "0x28023000",
+              "type": "4",
+              "file": "fip/enc.bin"
+            }
+        ]
+    }
+}
+
+
+

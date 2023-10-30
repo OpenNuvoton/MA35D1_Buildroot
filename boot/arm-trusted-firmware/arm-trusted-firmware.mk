@@ -25,6 +25,14 @@ ARM_TRUSTED_FIRMWARE_LICENSE_FILES = docs/license.rst
 endif
 endif
 
+ifeq ($(BR2_NUVTON_MA35D1),y)
+MA35=ma35d1
+else ifeq ($(BR2_NUVOTON_MA35D0),y)
+MA35=ma35d0
+else ifeq ($(BR2_NUVOTON_MA35H0),y)
+MA35=ma35h0
+endif
+
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE)$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LATEST_VERSION),y)
 BR_NO_CHECK_HASH_FOR += $(ARM_TRUSTED_FIRMWARE_SOURCE)
 endif
@@ -37,6 +45,14 @@ endif
 
 ifeq ($(BR2_TARGET_MA35D1_SECURE_BOOT),y)
 ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-python3 host-python3-nuwriter host-jq host-m4-bsp
+endif
+
+ifeq ($(BR2_TARGET_MA35D0_SECURE_BOOT),y)
+ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-python3 host-python3-nuwriter host-jq
+endif
+
+ifeq ($(BR2_TARGET_MA35H0_SECURE_BOOT),y)
+ARM_TRUSTED_FIRMWARE_DEPENDENCIES += host-python3 host-python3-nuwriter host-jq
 endif
 
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_NEEDS_ARM32_TOOLCHAIN),y)
@@ -140,14 +156,34 @@ define ARM_TRUSTED_FIRMWARE_BUILD_FIPTOOL
 			LDLIBS="$(HOST_LDFLAGS) -lcrypto" ; \
 	fi
 
+	if [ "${BR2_NUVOTON_MA35D1}" == "y" ]; then \
 	if [ "${TFA_CPU800_CUSTOM_DDR}" == "y" ] || [ "${TFA_CPU1G_CUSTOM_DDR}" == "y" ]; then \
-		cp $(BASE_DIR)/../board/nuvoton/ma35d1/ddr/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR)) $(@D)/plat/$(call qstrip,$(BR2_TARGET_OPTEE_OS_PLATFORM))/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM))/include/custom_ddr.h; \
+		cp $(BASE_DIR)/../board/nuvoton/ma35d1/ddr/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR)) $(@D)/plat/nuvoton/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM))/include/custom_ddr.h; \
+	fi \
+	fi
+
+	if [ "${BR2_NUVOTON_MA35D0}" == "y" ]; then \
+	if [ "${TFA_MA35D0_CPU650_CUSTOM_DDR}" == "y" ]; then \
+		cp $(BASE_DIR)/../board/nuvoton/ma35d0/ddr/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR)) $(@D)/plat/nuvoton/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM))/include/custom_ddr.h; \
+	fi \
+	fi
+
+	if [ "${BR2_NUVOTON_MA35H0}" == "y" ]; then \
+	if [ "${TFA_MA35H0_CPU650_CUSTOM_DDR}" == "y" ]; then \
+		cp $(BASE_DIR)/../board/nuvoton/ma35h0/ddr/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR)) $(@D)/plat/nuvoton/$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM))/include/custom_ddr.h; \
+	fi \
 	fi
 endef
 endif
 
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35),y)
+ifeq ($(BR2_NUVOTON_MA35D1),y)
 ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D1_SCPBL2_BASE=$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE))
+else ifeq ($(BR2_NUVOTON_MA35D0),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D0_SCPBL2_BASE=$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE))
+else ifeq ($(BR2_NUVOTON_MA35H0),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35H0_SCPBL2_BASE=$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE))
+endif
 endif
 
 ifeq ($(BR2_TARGET_ARM_TRUSTED_FIRMWARE_BL31),y)
@@ -194,9 +230,19 @@ endif
 ifeq ($(BR2_TARGET_MA35D1_SECURE_BOOT),y)
 ARM_TRUSTED_FIRMWARE_MAKE_OPTS += FIP_DE_AES=1
 endif
+
+ifeq ($(BR2_TARGET_MA35D0_SECURE_BOOT),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += FIP_DE_AES=1
+endif
+
+ifeq ($(BR2_TARGET_MA35H0)_SECURE_BOOT),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += FIP_DE_AES=1
+endif
+
 ARM_TRUSTED_FIRMWARE_MAKE_TARGETS += \
 	$(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_ADDITIONAL_TARGETS))
 
+ifeq ($(BR2_NUVTON_MA35D1),y)
 ifeq ($(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM)),ma35d1)
 ifeq ($(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_ADDITIONAL_VARIABLES)),)
 ifeq ($(TFA_CPU800_WB128M),y)
@@ -260,19 +306,94 @@ ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D1_PMIC=2 MA35D1_CPU_CORE=$(TFA_MA35D1_CPU
 else ifeq ($(TFA_MA35D1_PMIC_3),y)
 ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D1_PMIC=3 MA35D1_CPU_CORE=$(TFA_MA35D1_CPU_CORE_POWER)
 endif
+endif
 
+ifeq ($(BR2_NUVTON_MA35D0),y)
+ifeq ($(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM)),ma35d0)
+ifeq ($(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_ADDITIONAL_VARIABLES)),)
+ifeq ($(TFA_CPU650_CUSTOM_DDR),y)
+	BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME="ma35d0-cpu650-custom-ddr"
+endif
+
+ifneq ($(call findstring,custom,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
+        ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D0_DRAM_SIZE=${DSIZE} \
+					  MA35D0_DDR_MAX_SIZE=$(TFA_CUSTOM_DDR_SIZE) \
+					  MA35D0_DRAM_S_BASE=${SBASE} \
+					  MA35D0_BL32_BASE=${SBASE}
+else
+	ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D0_DRAM_SIZE=0x7F800000 MA35D0_DDR_MAX_SIZE=0x80000000 \
+					  MA35D0_DRAM_S_BASE=0xFF800000 MA35D0_BL32_BASE=0xFF800000
+endif
+endif
+endif
+
+ifeq ($(TFA_MA35D0_PMIC_0),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D0_PMIC=0
+else ifeq ($(TFA_MA35D0_PMIC_1),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D0_PMIC=1
+else ifeq ($(TFA_MA35D0_PMIC_2),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D0_PMIC=2
+else ifeq ($(TFA_MA35D0_PMIC_3),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35D0_PMIC=3
+endif
+endif
+
+ifeq ($(BR2_NUVTON_MA35H0),y)
+ifeq ($(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_PLATFORM)),ma35h0)
+ifeq ($(call qstrip,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_ADDITIONAL_VARIABLES)),)
+ifeq ($(TFA_CPU650_CUSTOM_DDR),y)
+	BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME="ma35h0-cpu650-custom-ddr"
+endif
+
+ifneq ($(call findstring,custom,$(BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME)),)
+        ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35H0_DRAM_SIZE=${DSIZE} \
+					  MA35H0_DDR_MAX_SIZE=$(TFA_CUSTOM_DDR_SIZE) \
+					  MA35H0_DRAM_S_BASE=${SBASE} \
+					  MA35H0_BL32_BASE=${SBASE}
+else
+	ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35H0_DRAM_SIZE=0x7F800000 MA35H0_DDR_MAX_SIZE=0x80000000 \
+					  MA35H0_DRAM_S_BASE=0xFF800000 MA35H0_BL32_BASE=0xFF800000
+endif
+endif
+endif
+
+ifeq ($(TFA_MA35H0_PMIC_0),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35H0_PMIC=0
+else ifeq ($(TFA_MA35H0_PMIC_1),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35H0_PMIC=1
+else ifeq ($(TFA_MA35H0_PMIC_2),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35H0_PMIC=2
+else ifeq ($(TFA_MA35H0_PMIC_3),y)
+ARM_TRUSTED_FIRMWARE_MAKE_OPTS += MA35H0_PMIC=3
+endif
+endif
 
 define ARM_TRUSTED_FIRMWARE_BUILD_FIP
-	if [ "${BR2_TARGET_MA35D1_SECURE_BOOT}" == "y" ]; then \
+	if [ "${BR2_TARGET_MA35D1_SECURE_BOOT}" == "y" ] || [ "${BR2_TARGET_MA35D0_SECURE_BOOT}" == "y" ] || \
+	[ "${BR2_TARGET_MA35H0_SECURE_BOOT}" == "y" ]; then \
 		cd ${BINARIES_DIR}; \
 		if [ -d ${BINARIES_DIR}/fip ]; then \
 			rm ${BINARIES_DIR}/fip -rf; \
 		fi; \
 		mkdir ${BINARIES_DIR}/fip; \
-		cat ${TOPDIR}/board/nuvoton/ma35d1/nuwriter/en_fip.json | \
-		${HOST_DIR}/bin/jq -r ".header.aeskey = \"${BR2_TARGET_MA35D1_AES_KEY}\"" | \
-		${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${BR2_TARGET_MA35D1_ECDSA_KEY}\"" \
-		> ${BINARIES_DIR}/fip/en_fip.json; \
+		if [ "${BR2_TARGET_MA35D1_SECURE_BOOT}" == "y" ]; then \
+			cat ${TOPDIR}/board/nuvoton/${MA35}/nuwriter/en_fip.json | \
+			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${BR2_TARGET_MA35D1_AES_KEY}\"" | \
+			${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${BR2_TARGET_MA35D1_ECDSA_KEY}\"" \
+			> ${BINARIES_DIR}/fip/en_fip.json; \
+		fi; \
+		if [ "${BR2_TARGET_MA35D0_SECURE_BOOT}" == "y" ]; then \
+			cat ${TOPDIR}/board/nuvoton/${MA35}/nuwriter/en_fip.json | \
+			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${BR2_TARGET_MA35D0_AES_KEY}\"" | \
+			${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${BR2_TARGET_MA35D0_ECDSA_KEY}\"" \
+			> ${BINARIES_DIR}/fip/en_fip.json; \
+		fi; \
+		if [ "${BR2_TARGET_MA35H0_SECURE_BOOT}" == "y" ]; then \
+			cat ${TOPDIR}/board/nuvoton/${MA35}/nuwriter/en_fip.json | \
+			${HOST_DIR}/bin/jq -r ".header.aeskey = \"${BR2_TARGET_MA35H0_AES_KEY}\"" | \
+			${HOST_DIR}/bin/jq -r ".header.ecdsakey = \"${BR2_TARGET_MA35H0_ECDSA_KEY}\"" \
+			> ${BINARIES_DIR}/fip/en_fip.json; \
+		fi; \
 		if [ "${BR2_TARGET_ARM_TRUSTED_FIRMWARE_BL31}" == "y" ]; then \
 			cp ${ARM_TRUSTED_FIRMWARE_IMG_DIR}/bl31.bin ${BINARIES_DIR}/fip/enc.bin; \
 			${HOST_DIR}/bin/python3 ${HOST_DIR}/bin/nuwriter.py -c ${BINARIES_DIR}/fip/en_fip.json>/dev/null; \

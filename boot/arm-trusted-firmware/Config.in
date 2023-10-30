@@ -53,6 +53,8 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_LEN
 
 endif
 
+if BR2_NUVOTON_MA35D1
+
 choice
         prompt "MA35D1 PMIC Select"
 config TFA_MA35D1_PMIC_0
@@ -142,6 +144,94 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR
 config TFA_CUSTOM_DDR_SIZE
 	string "Custom DDR size"
 	default "0x10000000"
+endif
+
+endif
+
+if BR2_NUVOTON_MA35D0
+
+choice
+        prompt "MA35D0 PMIC Select"
+config TFA_MA35D0_PMIC_0
+        bool "No PMIC"
+config TFA_MA35D0_PMIC_1
+        bool "DIALOG PMIC"
+config TFA_MA35D0_PMIC_2
+        bool "IP6103 PMIC"
+config TFA_MA35D0_PMIC_3
+        bool "APW7704F PMIC"
+endchoice
+
+choice
+	prompt "In-tree Device Tree Source file names"
+config TFA_MA35D0_CPU650_CUSTOM_DDR
+	bool "ma35d0-cpu650-custom-ddr"
+endchoice
+
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
+	string
+	default "ma35d0-cpu650-custom-ddr" if TFA_MA35D0_CPU650_CUSTOM_DDR
+	help
+	  Name of in-tree device tree source file, without
+	  the trailing .dts. You can provide a list of
+	  dts files to build, separated by spaces.
+
+	  The currently provided device tree of TF-A are as follows:
+		- ma35d0-cpu650-custom-ddr
+
+if (TFA_MA35D0_CPU650_CUSTOM_DDR)
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR
+	string "Custom DDR header file in board/nuvoton/ma35d0/ddr"
+	default "custom_ddr.h"
+
+config TFA_CUSTOM_DDR_SIZE
+	string "Custom DDR size"
+	default "0x10000000"
+endif
+
+endif
+
+if BR2_NUVOTON_MA35H0
+
+choice
+        prompt "MA35H0 PMIC Select"
+config TFA_MA35H0_PMIC_0
+        bool "No PMIC"
+config TFA_MA35H0_PMIC_1
+        bool "DIALOG PMIC"
+config TFA_MA35H0_PMIC_2
+        bool "IP6103 PMIC"
+config TFA_MA35H0_PMIC_3
+        bool "APW7704F PMIC"
+endchoice
+
+choice
+        prompt "In-tree Device Tree Source file names"
+config TFA_MA35H0_CPU650_CUSTOM_DDR
+        bool "ma35h0-cpu650-custom-ddr"
+endchoice
+
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_INTREE_DTS_NAME
+	string
+	default "ma35h0-cpu650-custom-ddr" if TFA_MA35H0_CPU650_CUSTOM_DDR
+	help
+	  Name of in-tree device tree source file, without
+	  the trailing .dts. You can provide a list of
+	  dts files to build, separated by spaces.
+
+	  The currently provided device tree of TF-A are as follows:
+		- ma35h0-cpu650-custom-ddr
+
+if (TFA_MA35H0_CPU650_CUSTOM_DDR)
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_CUSTOM_DDR
+	string "Custom DDR header file in board/nuvoton/ma35h0/ddr"
+	default "custom_ddr.h"
+
+config TFA_CUSTOM_DDR_SIZE
+	string "Custom DDR size"
+	default "0x10000000"
+endif
+
 endif
 
 choice

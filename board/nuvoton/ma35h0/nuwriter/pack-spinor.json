@@ -1,0 +1,41 @@
+{
+    "image":
+    [
+        {  
+          "offset": "0x000000",
+          "file": "header.bin",
+          "type": 1
+        },
+        {
+          "offset": "0x20000",
+          "file": "bl2.dtb",
+          "type": 0
+        },
+        {
+          "offset": "0x30000",
+          "file": "bl2.bin",
+          "type": 0
+        },
+        {
+          "offset": "0x40000",
+          "file": "fip.bin-spinor",
+          "type": 1
+        },
+        {
+          "offset": "0x240000",
+          "file": "uboot-env.bin-spinor",
+          "type": 1
+        },
+        {
+          "offset": "0x250000",
+          "file": "Image.dtb",
+          "type": 1
+        },
+	{
+          "offset": "0x260000",
+          "file": "Image",
+          "type": 1
+        }
+    ]
+}
+

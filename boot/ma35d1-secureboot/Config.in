@@ -26,3 +26,61 @@ config BR2_TARGET_MA35D1_ECDSA_KEY
           ECDSA Key
 endif
 endif
+
+if	BR2_NUVOTON_MA35D0
+config BR2_TARGET_MA35D0_BOOT_SPACE
+        int "MA35D0 Boot Space(KiB)"
+	default "32768"
+        help
+          Reserved space form MMC/SD 
+
+config BR2_TARGET_MA35D0_SECURE_BOOT
+	bool "MA35D0 Secure Boot"
+	help
+	  MA35D0 Secure Boot is a first level bootloader for the MA35D1
+	  devices.
+
+if	BR2_TARGET_MA35D0_SECURE_BOOT
+
+config BR2_TARGET_MA35D0_AES_KEY
+	string "AES Key"
+	default "0A0BC81E5AFBF836C5E0CFBEA12C1E269A2EBC3B0B6EC39EEE1C7142F760EBC4"
+	help
+	  AES Key
+
+config BR2_TARGET_MA35D0_ECDSA_KEY
+	string "ECDSA Key"
+	default "8F1571E9975006A545DF854264F7B18934B5CB2EE619E66DBC0FBEA52C71C919"
+	help
+          ECDSA Key
+endif
+endif
+
+if	BR2_NUVOTON_MA35H0
+config BR2_TARGET_MA35H0_BOOT_SPACE
+        int "MA35H0 Boot Space(KiB)"
+	default "32768"
+        help
+          Reserved space form MMC/SD 
+
+config BR2_TARGET_MA35H0_SECURE_BOOT
+	bool "MA35H0 Secure Boot"
+	help
+	  MA35H0 Secure Boot is a first level bootloader for the MA35D1
+	  devices.
+
+if	BR2_TARGET_MA35H0_SECURE_BOOT
+
+config BR2_TARGET_MA35H0_AES_KEY
+	string "AES Key"
+	default "0A0BC81E5AFBF836C5E0CFBEA12C1E269A2EBC3B0B6EC39EEE1C7142F760EBC4"
+	help
+	  AES Key
+
+config BR2_TARGET_MA35H0_ECDSA_KEY
+	string "ECDSA Key"
+	default "8F1571E9975006A545DF854264F7B18934B5CB2EE619E66DBC0FBEA52C71C919"
+	help
+          ECDSA Key
+endif
+endif

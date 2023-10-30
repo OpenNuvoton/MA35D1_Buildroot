@@ -13,7 +13,7 @@ if BR2_TARGET_OPTEE_OS
 
 choice
 	prompt "OP-TEE OS version"
-	default BR2_TARGET_OPTEE_OS_CUSTOM_GIT if BR2_NUVOTON_MA35D1
+	default BR2_TARGET_OPTEE_OS_CUSTOM_GIT if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	default BR2_TARGET_OPTEE_OS_LATEST
 	help
 	  Select the version of OP-TEE OS you want to use
@@ -31,12 +31,24 @@ config BR2_TARGET_OPTEE_OS_CUSTOM_GIT
 
 config BR2_TARGET_OPTEE_OS_MA35D1_TARBALL
         bool "MA35D1 tarball"
+        depends on BR2_NUVOTON_MA35D1
         help
           Use a custom version fetched from a tarball.
 
+config BR2_TARGET_OPTEE_OS_MA35D0_TARBALL
+        bool "MA35D0 tarball"
+        depends on BR2_NUVOTON_MA35D0
+        help
+          Use a custom version fetched from a tarball.
+          
+config BR2_TARGET_OPTEE_OS_MA35H0_TARBALL
+        bool "MA35H0 tarball"
+        depends on BR2_NUVOTON_MA35H0
+        help
+          Use a custom version fetched from a tarball.
 endchoice
 
-if BR2_TARGET_OPTEE_OS_MA35D1_TARBALL
+if BR2_TARGET_OPTEE_OS_MA35D1_TARBALL || BR2_TARGET_OPTEE_OS_MA35D0_TARBALL || BR2_TARGET_OPTEE_OS_MA35H0_TARBALL
 
 config BR2_TARGET_OPTEE_OS_VERSION
         string "Custom repository version"
@@ -52,7 +64,7 @@ if BR2_TARGET_OPTEE_OS_CUSTOM_GIT
 config BR2_TARGET_OPTEE_OS_CUSTOM_REPO_URL
 	string "URL of custom repository"
 	depends on BR2_TARGET_OPTEE_OS_CUSTOM_GIT
-	default "https://github.com/OpenNuvoton/MA35D1_optee_os-v3.9.0.git" if BR2_NUVOTON_MA35D1
+	default "https://github.com/OpenNuvoton/MA35D1_optee_os-v3.9.0.git" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0 
 	help
 	  Specific location of the reference source tree Git
 	  repository.
@@ -60,7 +72,7 @@ config BR2_TARGET_OPTEE_OS_CUSTOM_REPO_URL
 config BR2_TARGET_OPTEE_OS_CUSTOM_REPO_VERSION
 	string "Custom repository version"
 	depends on BR2_TARGET_OPTEE_OS_CUSTOM_GIT
-	default "0e0253588276e9604bd27ea6bd4fcce96837f60b" if BR2_NUVOTON_MA35D1
+	default "0e0253588276e9604bd27ea6bd4fcce96837f60b" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	help
 	  Revision to use in the typical format used by Git, i.e a
 	  SHA1 or a tag.
@@ -72,7 +84,7 @@ config BR2_TARGET_OPTEE_OS_VERSION
 	default "3.11.0"	if BR2_TARGET_OPTEE_OS_LATEST
 	default BR2_TARGET_OPTEE_OS_CUSTOM_REPO_VERSION \
 				if BR2_TARGET_OPTEE_OS_CUSTOM_GIT
-	default "6bfac5d439e29c11dcc6767e1e587aa7e94bb45b" if BR2_NUVOTON_MA35D1
+	default "6bfac5d439e29c11dcc6767e1e587aa7e94bb45b" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 config BR2_TARGET_OPTEE_OS_CORE
 	bool "Build core"
 	default y
@@ -102,14 +114,14 @@ config BR2_TARGET_OPTEE_OS_SERVICES
 
 config BR2_TARGET_OPTEE_OS_PLATFORM
 	string "Target platform (mandatory)"
-	default "nuvoton" if BR2_NUVOTON_MA35D1
+	default "nuvoton" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	help
 	  Value for the mandated PLATFORM build directive provided to
 	  OP-TEE OS.
 
 config BR2_TARGET_OPTEE_OS_PLATFORM_FLAVOR
 	string "Target platform flavor (optional)"
-	default "MA35D1" if BR2_NUVOTON_MA35D1
+	default "MA35D1" if BR2_NUVOTON_MA35D1 || BR2_NUVOTON_MA35D0 || BR2_NUVOTON_MA35H0
 	help
 	  Value for the optional PLATFORM_FLAVOR build directive
 	  provided to OP-TEE OS.

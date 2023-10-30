@@ -82,10 +82,10 @@ config BR2_LINUX_KERNEL_CUSTOM_TARBALL
 	  to use a make variable like $(TOPDIR) to reference the root of
 	  the Buildroot tree.
 
-config BR2_LINUX_KERNEL_MA35D1
-	bool "Nuvoton MA35D1"
+config BR2_LINUX_KERNEL_MA35
+	bool "Nuvoton MA35D1/MA35D0/MA35H0"
 	help
-	  linux kernel for ma35d1
+	  linux kernel for ma35d1/ma35d0/ma35h0
 
 config BR2_LINUX_KERNEL_CUSTOM_GIT
 	bool "Custom Git repository"
@@ -108,22 +108,22 @@ config BR2_LINUX_KERNEL_CUSTOM_SVN
 endchoice
 
 choice
-	prompt "MA35D1 Version"
-	depends on BR2_LINUX_KERNEL_MA35D1
+	prompt "MA35 Version"
+	depends on BR2_LINUX_KERNEL_MA35
 
-config BR2_LINUX_KERNEL_MA35D1_5_4_VERSION
+config BR2_LINUX_KERNEL_MA35_5_4_VERSION
 	bool "Kernel 5.4"
 	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_4
 
-config BR2_LINUX_KERNEL_MA35D1_5_10_VERSION
+config BR2_LINUX_KERNEL_MA35_5_10_VERSION
 	bool "Kernel 5.10"
 	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_10
 
 endchoice
 
-config BR2_TARGET_KERNEL_MA35D1_VERSION
+config BR2_TARGET_KERNEL_MA35_VERSION
         string "Custom repository version"
-	depends on BR2_LINUX_KERNEL_MA35D1
+	depends on BR2_LINUX_KERNEL_MA35
         default "master"
         help
 	  This option allows Buildroot to get the Linux kernel source
@@ -158,7 +158,7 @@ config BR2_LINUX_KERNEL_VERSION
 	default BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE \
 		if BR2_LINUX_KERNEL_CUSTOM_VERSION
 	default "custom" if BR2_LINUX_KERNEL_CUSTOM_TARBALL
-	default "custom" if BR2_LINUX_KERNEL_MA35D1
+	default "custom" if BR2_LINUX_KERNEL_MA35
 	default BR2_LINUX_KERNEL_CUSTOM_REPO_VERSION \
 		if BR2_LINUX_KERNEL_CUSTOM_GIT || BR2_LINUX_KERNEL_CUSTOM_HG || BR2_LINUX_KERNEL_CUSTOM_SVN
 

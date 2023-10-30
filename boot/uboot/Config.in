@@ -116,6 +116,8 @@ config BR2_TARGET_UBOOT_USE_CUSTOM_CONFIG
 
 endchoice
 
+if BR2_NUVOTON_MA35D1
+
 config BR2_TARGET_UBOOT_BOARD_DEFCONFIG
 	string "Board defconfig"
 	depends on BR2_TARGET_UBOOT_USE_DEFCONFIG
@@ -143,6 +145,76 @@ config BR2_MA35D1_RESIZE_DISK_DRIVE
 config BR2_MA35D1_RESIZE_DISK_NUM
 	string "Disk Number"
 	default "p1"
+
+endif
+
+endif
+
+if BR2_NUVOTON_MA35D0
+
+config BR2_TARGET_UBOOT_BOARD_DEFCONFIG
+	string "Board defconfig"
+	depends on BR2_TARGET_UBOOT_USE_DEFCONFIG
+	help
+	  Name of the board for which U-Boot should be built, without
+	  the _defconfig suffix.
+	  ma35d0 u-boot defconfig supports the follwing:
+	      ma35d0_sdcard0
+	      ma35d0_sdcard1
+	      ma35d0_spinand
+	      ma35d0_spinor
+	      ma35d0_nand
+
+config BR2_MA35D0_RESIZE_SD_MAX
+	bool "Auto resize sdcard to Max."
+	help
+	  Run script to auto resize sdcard to Max.
+
+if BR2_MA35D0_RESIZE_SD_MAX
+
+config BR2_MA35D0_RESIZE_DISK_DRIVE
+	string "Disk Drive"
+	default "/dev/mmcblk0"
+
+config BR2_MA35D0_RESIZE_DISK_NUM
+	string "Disk Number"
+	default "p1"
+
+endif
+
+endif
+
+if BR2_NUVOTON_MA35H0
+
+config BR2_TARGET_UBOOT_BOARD_DEFCONFIG
+	string "Board defconfig"
+	depends on BR2_TARGET_UBOOT_USE_DEFCONFIG
+	help
+	  Name of the board for which U-Boot should be built, without
+	  the _defconfig suffix.
+	  ma35h0 u-boot defconfig supports the follwing:
+	      ma35h0_sdcard0
+	      ma35h0_sdcard1
+	      ma35h0_spinand
+	      ma35h0_spinor
+	      ma35h0_nand
+
+config BR2_MA35H0_RESIZE_SD_MAX
+	bool "Auto resize sdcard to Max."
+	help
+	  Run script to auto resize sdcard to Max.
+
+if BR2_MA35H0_RESIZE_SD_MAX
+
+config BR2_MA35H0_RESIZE_DISK_DRIVE
+	string "Disk Drive"
+	default "/dev/mmcblk0"
+
+config BR2_MA35H0_RESIZE_DISK_NUM
+	string "Disk Number"
+	default "p1"
+
+endif
 
 endif
 

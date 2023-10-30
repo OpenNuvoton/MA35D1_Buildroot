@@ -1,5 +1,0 @@
-config BR2_PACKAGE_HOST_NU_ECLIPSE
-	bool "host nu-eclipse"
-	help
-	  nuvoton eclipse IDE
-

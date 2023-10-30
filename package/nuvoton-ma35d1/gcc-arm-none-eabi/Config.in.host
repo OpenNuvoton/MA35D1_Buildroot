@@ -1,5 +1,0 @@
-config BR2_PACKAGE_HOST_GCC_ARM_NONE_EABI
-	bool "host gcc-arm-none-eabi"
-	help
-	  GCC for Cortex-M4 
-

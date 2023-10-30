@@ -38,8 +38,8 @@ config BR2_PACKAGE_JPEG_TURBO
 
 	  http://www.libjpeg-turbo.org
 
-config BR2_PACKAGE_JPEG_TURBO_MA35D1
-	bool "jpeg-turbo-ma35d1"
+config BR2_PACKAGE_JPEG_TURBO_MA35XX
+	bool "jpeg-turbo-ma35xx"
 	select BR2_PACKAGE_HAS_JPEG
 	help
 	  Libjpeg-turbo is a derivative of libjpeg that uses SIMD
@@ -56,7 +56,7 @@ endchoice
 
 source "package/jpeg-turbo/Config.in.options"
 
-source "package/jpeg-turbo-ma35d1/Config.in.options"
+source "package/jpeg-turbo-ma35xx/Config.in.options"
 
 config BR2_PACKAGE_HAS_JPEG
 	bool

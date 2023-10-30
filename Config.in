@@ -2,10 +2,6 @@
 
 mainmenu "Buildroot $BR2_VERSION Configuration"
 
-config BR2_NUVOTON_MA35D1
-	bool
-	default y
-
 config BR2_HAVE_DOT_CONFIG
 	bool
 	default y
@@ -59,6 +55,10 @@ config BR2_HOST_GCC_AT_LEAST_9
 	default y if BR2_HOST_GCC_VERSION = "9"
 	select BR2_HOST_GCC_AT_LEAST_8
 
+config BR2_HOST_NVT
+        bool
+        default n
+
 # When adding new entries above, be sure to update
 # the HOSTCC_MAX_VERSION variable in the Makefile.
 
@@ -92,6 +92,29 @@ config BR2_NEEDS_HOST_GCC_PLUGIN_SUPPORT
 source "arch/Config.in"
 
 menu "Build options"
+
+choice
+        prompt "Nuvoton MPU"
+	default BR2_NUVOTON_NUC9X0
+        help
+          Set the Nuvoton MPU Family
+
+config BR2_NUVOTON_MA35D1
+	bool "MA35D1"
+	select BR2_HOST_NVT
+
+config BR2_NUVOTON_MA35D0
+	bool "MA35D0"
+	select BR2_HOST_NVT
+
+config BR2_NUVOTON_MA35H0
+	bool "MA35H0"
+	select BR2_HOST_NVT
+
+config BR2_NUVOTON_NUC9X0
+        bool "NUC9X0"
+
+endchoice
 
 menu "Commands"
 

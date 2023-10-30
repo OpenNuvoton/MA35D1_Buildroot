@@ -114,7 +114,7 @@ DATE := $(shell date +%Y%m%d)
 # Compute the full local version string so packages can use it as-is
 # Need to export it, so it can be got from environment in children (eg. mconf)
 
-BR2_LOCALVERSION := $(shell $(TOPDIR)/support/scripts/setlocalversion)
+#BR2_LOCALVERSION := $(shell $(TOPDIR)/support/scripts/setlocalversion)
 ifeq ($(BR2_LOCALVERSION),)
 export BR2_VERSION_FULL := $(BR2_VERSION)
 else

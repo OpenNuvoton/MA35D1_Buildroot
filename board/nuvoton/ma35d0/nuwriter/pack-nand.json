@@ -1,0 +1,46 @@
+{
+    "image":
+    [
+        {  
+          "offset": "0x000000",
+          "file": "header.bin",
+          "type": 128
+        },
+        {
+          "offset": "0xC0000",
+          "file": "bl2.dtb",
+          "type": 128
+        },
+        {
+          "offset": "0xE0000",
+          "file": "bl2.bin",
+          "type": 128
+        },
+        {
+          "offset": "0x100000",
+          "file": "fip.bin-nand",
+          "type": 1
+        },
+        {
+          "offset": "0x300000",
+          "file": "uboot-env.bin-nand",
+          "type": 1
+        },
+        {
+          "offset": "0x3C0000",
+          "file": "Image.dtb",
+          "type": 1
+        },
+        {
+          "offset": "0x400000",
+          "file": "Image",
+          "type": 1
+	},
+        {
+          "offset": "0x1C00000",
+          "file": "rootfs.ubi",
+          "type": 1
+        }
+    ]
+}
+

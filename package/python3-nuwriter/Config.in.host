@@ -1,0 +1,7 @@
+config BR2_PACKAGE_HOST_PYTHON3_NUWRITER
+	bool
+	depends on BR2_PACKAGE_HOST_PYTHON3
+	default "y" if BR2_HOST_NVT=y
+	help
+	  nuwriter tool
+

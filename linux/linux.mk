@@ -23,17 +23,26 @@ define LINUX_HELP_CMDS
 	@echo '                             by BR2_LINUX_KERNEL_CUSTOM_CONFIG_FILE'
 endef
 
+ifeq ($(BR2_NUVOTON_MA35D1),y)
+MA35=ma35d1
+else ifeq ($(BR2_NUVOTON_MA35D0),y)
+MA35=ma35d0
+else ifeq ($(BR2_NUVOTON_MA35H0),y)
+MA35=ma35h0
+endif
+
+
 # Compute LINUX_SOURCE and LINUX_SITE from the configuration
 ifeq ($(BR2_LINUX_KERNEL_CUSTOM_TARBALL),y)
 LINUX_TARBALL = $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION))
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
-else ifeq ($(BR2_LINUX_KERNEL_MA35D1_5_10_VERSION),y)
-LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.10.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35D1_VERSION)))/MA35D1_linux-5.10.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35D1_VERSION)).tar.gz
+else ifeq ($(BR2_LINUX_KERNEL_MA35_5_10_VERSION),y)
+LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.10.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-5.10.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
-else ifeq ($(BR2_LINUX_KERNEL_MA35D1_5_4_VERSION),y)
-LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.4.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35D1_VERSION)))/MA35D1_linux-5.4.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35D1_VERSION)).tar.gz
+else ifeq ($(BR2_LINUX_KERNEL_MA35_5_4_VERSION),y)
+LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.4.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-5.4.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
 else ifeq ($(BR2_LINUX_KERNEL_CUSTOM_GIT),y)
@@ -393,9 +402,9 @@ LINUX_DEPENDENCIES += host-bison host-flex
 ifeq ($(BR2_LINUX_KERNEL_DTB_IS_SELF_BUILT),)
 define LINUX_BUILD_DTB
 	$(TOPDIR)/linux/dts-reserve \
-		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/ma35d1.dtsi
+		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/$(MA35).dtsi
 	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35),$(TOPDIR)/linux/dts-reserve \
-		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/ma35d1.dtsi \
+		$(LINUX_ARCH_PATH)/boot/dts/nuvoton/$(MA35).dtsi \
 		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_BASE)) \
 		$(strip $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_LEN)))
 	$(TOPDIR)/linux/dts-reserve \
@@ -471,7 +480,7 @@ define LINUX_BUILD_CMDS
 		mkdir -p $(@D)/../image; \
 	fi
 	if grep -q "BR2_TARGET_OPTEE_OS=y" .config; then \
-		cat board/nuvoton/ma35d1/optee.config >> $(@D)/.config; \
+		cat board/nuvoton/$(MA35)/optee.config >> $(@D)/.config; \
 	fi
 	$(LINUX_MAKE_ENV) $(MAKE) $(LINUX_MAKE_FLAGS) -C $(@D) all
 	$(LINUX_MAKE_ENV) $(MAKE) $(LINUX_MAKE_FLAGS) -C $(@D) $(LINUX_TARGET_NAME)

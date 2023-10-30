@@ -1,0 +1,12 @@
+menuconfig BR2_PACKAGE_NUVOTON_MA35
+	bool "host nuvoton-ma35xx libraries"
+	depends on BR2_arm || BR2_aarch64
+	help
+	  Those packages provide some hardware tools for Nutoton 
+	  MA35D1 platforms.
+
+if BR2_PACKAGE_NUVOTON_MA35 && BR2_NUVOTON_MA35D1
+source "package/nuvoton-ma35xx/m4-bsp/Config.in.host"
+source "package/nuvoton-ma35xx/gcc-arm-none-eabi/Config.in.host"
+source "package/nuvoton-ma35xx/nu-eclipse/Config.in.host"
+endif
