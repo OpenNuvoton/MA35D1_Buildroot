@@ -25,7 +25,7 @@ ARM_TRUSTED_FIRMWARE_LICENSE_FILES = docs/license.rst
 endif
 endif
 
-ifeq ($(BR2_NUVTON_MA35D1),y)
+ifeq ($(BR2_NUVOTON_MA35D1),y)
 MA35=ma35d1
 else ifeq ($(BR2_NUVOTON_MA35D0),y)
 MA35=ma35d0
