@@ -116,6 +116,19 @@ config BR2_TARGET_UBOOT_USE_CUSTOM_CONFIG
 
 endchoice
 
+if BR2_NUVOTON_NUC9X0
+
+config BR2_TARGET_UBOOT_BOARD_DEFCONFIG
+	string "Board defconfig"
+	depends on BR2_TARGET_UBOOT_USE_DEFCONFIG
+	help
+	  Name of the board for which U-Boot should be built, without
+	  the _defconfig suffix.
+
+endif
+
+
+
 if BR2_NUVOTON_MA35D1
 
 config BR2_TARGET_UBOOT_BOARD_DEFCONFIG
