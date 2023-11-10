@@ -4,7 +4,7 @@ MODULES_DIR=board/nuvoton/ma35d1/modules/5.4.181
 MODULES_TDIR=$TARGET_DIR/lib/modules/5.4.181
 GFXDRIVERS_TDIR=$TARGET_DIR/usr/lib/directfb-1.7-7/gfxdrivers
 
-if grep -Eq "^BR2_LINUX_KERNEL_MA35D1_5_10_VERSION=y$" ${BR2_CONFIG}; then
+if grep -Eq "^BR2_LINUX_KERNEL_MA35_5_10_VERSION=y$" ${BR2_CONFIG}; then
 	MODULES_DIR=board/nuvoton/ma35d1/modules/5.10.140
 	MODULES_TDIR=$TARGET_DIR/lib/modules/5.10.140
 fi
