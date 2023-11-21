@@ -65,6 +65,6 @@ config BR2_PACKAGE_PROVIDES_JPEG
 	string
 	default "libjpeg"    if BR2_PACKAGE_LIBJPEG
 	default "jpeg-turbo" if BR2_PACKAGE_JPEG_TURBO
-	default "jpeg-turbo-ma35d1" if BR2_PACKAGE_JPEG_TURBO_MA35D1
+	default "jpeg-turbo-ma35xx" if BR2_PACKAGE_JPEG_TURBO_MA35XX
 
 endif
