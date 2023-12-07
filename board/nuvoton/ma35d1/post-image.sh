@@ -278,7 +278,7 @@ IMAGE_CMD_sdcard()
 		$(cat ${NUWRITER_DIR}/pack-sdcard.json | \
 		${HOST_DIR}/bin/jq 'setpath(["image",2,"file"];"nuwriter/enc_bl2.dtb")' | \
 		${HOST_DIR}/bin/jq 'setpath(["image",3,"file"];"nuwriter/enc_bl2.bin")' | \
-		${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024+$IMAGE_ROOTFS_ALIGNMENT*1024))'")' \
+		${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024))'")' \
 		> ${NUWRITER_TARGET}/pack-sdcard.json); \
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
 		cp pack/pack.bin pack-${IMAGE_BASENAME}-${MACHINE}-enc-sdcard.bin; \
