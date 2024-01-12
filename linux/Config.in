@@ -111,10 +111,6 @@ choice
 	prompt "MA35 Version"
 	depends on BR2_LINUX_KERNEL_MA35
 
-config BR2_LINUX_KERNEL_MA35_5_4_VERSION
-	bool "Kernel 5.4"
-	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_4
-
 config BR2_LINUX_KERNEL_MA35_5_10_VERSION
 	bool "Kernel 5.10"
 	select BR2_TOOLCHAIN_HEADERS_AT_LEAST_5_10

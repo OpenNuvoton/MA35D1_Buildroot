@@ -1,14 +1,8 @@
 #!/bin/sh
 
-MODULES_DIR=board/nuvoton/ma35h0/modules/5.4.181
-MODULES_TDIR=$TARGET_DIR/lib/modules/5.4.181
+MODULES_DIR=board/nuvoton/ma35h0/modules/5.10.140
+MODULES_TDIR=$TARGET_DIR/lib/modules/5.10.140
 GFXDRIVERS_TDIR=$TARGET_DIR/usr/lib/directfb-1.7-7/gfxdrivers
-
-if grep -Eq "^BR2_LINUX_KERNEL_MA35_5_10_VERSION=y$" ${BR2_CONFIG}; then
-	MODULES_DIR=board/nuvoton/ma35h0/modules/5.10.140
-	MODULES_TDIR=$TARGET_DIR/lib/modules/5.10.140
-fi
-
 
 RESIZE_FILE=${TARGET_DIR}/etc/init.d/S50resize
 cp $MODULES_DIR/../../resize.sh ${TARGET_DIR}/etc/
