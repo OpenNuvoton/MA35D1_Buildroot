@@ -12,12 +12,12 @@
     },
     {
       "offset": "0x20000",
-      "file": "bl2.dtb",
+      "file": "nuwriter/bl2.dtb",
       "type": 0
     },
     {
       "offset": "0x30000",
-      "file": "bl2.bin",
+      "file": "nuwriter/bl2.bin",
       "type": 0
     },
     {

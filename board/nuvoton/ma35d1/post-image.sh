@@ -116,6 +116,8 @@ IMAGE_CMD_spinand() {
 			cp ${NUWRITER_DIR}/header-spinand.json ${NUWRITER_TARGET}/header-spinand.json
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinand.json; \
 			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinand.bin; \
+			cp conv/bl2.dtb ${NUWRITER_TARGET}/bl2.dtb; \
+			cp conv/bl2.bin ${NUWRITER_TARGET}/bl2.bin; \
 			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-spinand.bin header.bin;
 			cp ${NUWRITER_DIR}/pack-spinand.json ${NUWRITER_TARGET}/pack-spinand.json;
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-spinand.json; \
@@ -168,6 +170,8 @@ IMAGE_CMD_spinor() {
 		cp ${NUWRITER_DIR}/header-spinor.json ${NUWRITER_TARGET}/header-spinor.json
 		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-spinor.json; \
 		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-spinor.bin; \
+		cp conv/bl2.dtb ${NUWRITER_TARGET}/bl2.dtb; \
+		cp conv/bl2.bin ${NUWRITER_TARGET}/bl2.bin; \
 		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-spinor.bin header.bin;
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-spinor.json; \
 		cp ${NUWRITER_DIR}/pack-spinor.json ${NUWRITER_TARGET}/pack-spinor.json;
@@ -222,6 +226,8 @@ IMAGE_CMD_nand() {
 			cp ${NUWRITER_DIR}/header-nand.json ${NUWRITER_TARGET}/header-nand.json
 			${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_DIR}/header-nand.json; \
 			cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-nand.bin; \
+			cp conv/bl2.dtb ${NUWRITER_TARGET}/bl2.dtb; \
+			cp conv/bl2.bin ${NUWRITER_TARGET}/bl2.bin; \
 			ln -sf header-${IMAGE_BASENAME}-${MACHINE}-nand.bin header.bin;
 			${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_DIR}/pack-nand.json; \
 			cp ${NUWRITER_DIR}/pack-nand.json ${NUWRITER_TARGET}/pack-nand.json;
@@ -295,6 +301,8 @@ IMAGE_CMD_sdcard()
 		cp ${NUWRITER_DIR}/header-sdcard.json ${NUWRITER_TARGET}
 		${HOST_DIR}/bin/nuwriter.py -c ${NUWRITER_TARGET}/header-sdcard.json; \
 		cp conv/header.bin header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin; \
+		cp conv/bl2.dtb ${NUWRITER_TARGET}/bl2.dtb; \
+		cp conv/bl2.bin ${NUWRITER_TARGET}/bl2.bin; \
 		ln -sf header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin header.bin;
 		$(cat ${NUWRITER_DIR}/pack-sdcard.json | ${HOST_DIR}/bin/jq 'setpath(["image",8,"offset"];"'$(( ${BOOT_SPACE_ALIGNED}*1024))'")' > ${NUWRITER_TARGET}/pack-sdcard.json); \
 		${HOST_DIR}/bin/nuwriter.py -p ${NUWRITER_TARGET}/pack-sdcard.json; \
@@ -314,9 +322,9 @@ IMAGE_CMD_sdcard()
 		# 0x400
 		dd if=${BINARIES_DIR}/header-${IMAGE_BASENAME}-${MACHINE}-sdcard.bin of=${SDCARD} conv=notrunc seek=2 bs=512 &>${NULLDEV}
 		# 0x20000
-		dd if=${BINARIES_DIR}/bl2.dtb of=${SDCARD} conv=notrunc seek=256 bs=512 &>${NULLDEV}
+		dd if=${BINARIES_DIR}/nuwriter/bl2.dtb of=${SDCARD} conv=notrunc seek=256 bs=512 &>${NULLDEV}
 		# 0x30000
-		dd if=${BINARIES_DIR}/bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
+		dd if=${BINARIES_DIR}/nuwriter/bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
 	fi
         # 0x40000
         dd if=${BINARIES_DIR}/uboot-env.bin-sdcard of=${SDCARD} conv=notrunc seek=512 bs=512 &>${NULLDEV}

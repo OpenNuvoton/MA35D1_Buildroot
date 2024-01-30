@@ -3,12 +3,12 @@
     [
         {  
           "offset": "0x000000",
-          "file": "header.bin",
+          "file": "nuwriter/header.bin",
           "type": 128
         },
         {
           "offset": "0xC0000",
-          "file": "bl2.dtb",
+          "file": "nuwriter/bl2.dtb",
           "type": 128
         },
         {
