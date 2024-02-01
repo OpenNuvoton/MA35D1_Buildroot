@@ -3,7 +3,7 @@
     [
         {  
           "offset": "0x000000",
-          "file": "nuwriter/header.bin",
+          "file": "header.bin",
           "type": 128
         },
         {
@@ -13,7 +13,7 @@
         },
         {
           "offset": "0xE0000",
-          "file": "bl2.bin",
+          "file": "nuwriter/bl2.bin",
           "type": 128
         },
         {
