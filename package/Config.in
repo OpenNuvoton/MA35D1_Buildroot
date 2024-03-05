@@ -1,6 +1,8 @@
+if BR2_NUVOTON_NUC9X0
 menu "Applications"
         source "package/applications/Config.in"
 endmenu
+endif
 
 menu "Target packages"
 

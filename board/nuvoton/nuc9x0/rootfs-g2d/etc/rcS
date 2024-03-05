@@ -1,0 +1,37 @@
+#!/bin/sh
+
+#adc touch setting
+export TSLIB_CALIBFILE='/etc/pointercal'
+export TSLIB_CONFFILE='/etc/ts.conf'
+export TSLIB_TSDEVICE='/dev/input/event0'
+
+#backlight enable
+echo 0xC7 > /sys/class/gpio/export
+cd /sys/class/gpio/gpio199/
+echo out > direction
+echo 1 > value
+
+# Start all init scripts in /etc/init.d
+# executing them in numerical order.
+#
+for i in /etc/init.d/S??* ;do
+
+     # Ignore dangling symlinks (if any).
+     [ ! -f "$i" ] && continue
+
+     case "$i" in
+	*.sh)
+	    # Source shell script for speed.
+	    (
+		trap - INT QUIT TSTP
+		set start
+		. $i
+	    )
+	    ;;
+	*)
+	    # No sh extension, so fork subprocess.
+	    $i start
+	    ;;
+    esac
+done
+
