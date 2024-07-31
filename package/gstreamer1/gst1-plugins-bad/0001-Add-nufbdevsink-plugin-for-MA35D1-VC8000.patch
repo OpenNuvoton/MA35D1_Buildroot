@@ -558,7 +558,7 @@ diff -Naur yocto/sys/nufbdev/gstnufbdevsink.c gst-plugins-bad-1.18.5/sys/nufbdev
 +      continue;
 +
 +    if (ioctl(csp->fd_vc8k, VC8KIOC_PP_SET_CONFIG, csp->pp) != 0) {
-+      printf("VC8KIOC_PP_SET_CONFIG failed (%s)", strerror(errno));
++      // printf("VC8KIOC_PP_SET_CONFIG failed (%s)", strerror(errno));  // not an error
 +      continue;
 +    }
 +    else
@@ -566,9 +566,9 @@ diff -Naur yocto/sys/nufbdev/gstnufbdevsink.c gst-plugins-bad-1.18.5/sys/nufbdev
 +  }
 +  if (i < 10) {
 +    printf("VC8000 %s opened.\n", dev_name);
-+    return -1;
++    return 0;
 +  }
-+  return 0;
++  return -1;
 +  }
 +
 +static void
