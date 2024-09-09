@@ -33,9 +33,19 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35
 
 endchoice
 
+if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35
+
+config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_WITH_IPI
+	bool "IPI support"
+	depends on BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SCP_BL2
+	help
+	  This helps enable Ips for IPI.
+endif
+
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_SCP_URL
 	string "SCP_BL2 binary file names"
 	default "RTP-BSP/Template.bin" if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4
+	default "AMP_Core1RTOS.bin" if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35_WITH_IPI
 	default "AmpCore1.bin" if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35
 	help
 	  Name of binary file.
