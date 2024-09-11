@@ -11,7 +11,10 @@ DTS_FILE=$1
 
 # Check if the amp node exists
 if grep -q "amp:" "$DTS_FILE"; then
+    echo "Attempting to parse amp node..."
+else
     echo "Error: AMP node not found!"
+    exit 1
 fi
 
 # 1. Change status of amp to 'okay'
