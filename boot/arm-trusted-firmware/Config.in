@@ -19,12 +19,14 @@ if BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SCP_BL2
 
 choice
 	prompt "Load Image into FIP Image"
+
+if BR2_NUVOTON_MA35D1
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_M4
 	bool "RTP M4 Image"
 	depends on BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SCP_BL2
 	help
           Add RTP m4 binary file into FIP Image
-
+endif
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35
         bool "A35 image"
         depends on BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SCP_BL2
