@@ -264,16 +264,6 @@ else
 LINUX_IMAGE_PATH = $(LINUX_ARCH_PATH)/boot/$(LINUX_IMAGE_NAME)
 endif # BR2_LINUX_KERNEL_VMLINUX
 
-define LINUX_APPLY_LOCAL_PATCHES
-	for p in $(filter-out ftp://% http://% https://%,$(LINUX_PATCHES)) ; do \
-		if test -d $$p ; then \
-			$(APPLY_PATCHES) $(@D) $$p \*.patch || exit 1 ; \
-		else \
-			$(APPLY_PATCHES) $(@D) `dirname $$p` `basename $$p` || exit 1; \
-		fi \
-	done
-endef
-
 LINUX_POST_PATCH_HOOKS += LINUX_APPLY_LOCAL_PATCHES
 
 # Older linux kernels use deprecated perl constructs in timeconst.pl
@@ -285,6 +275,16 @@ define LINUX_TRY_PATCH_TIMECONST
 	fi
 endef
 LINUX_POST_PATCH_HOOKS += LINUX_TRY_PATCH_TIMECONST
+
+define LINUX_APPLY_LOCAL_PATCHES
+	for p in $(filter-out ftp://% http://% https://%,$(LINUX_PATCHES)) ; do \
+		if test -d $$p ; then \
+			$(APPLY_PATCHES) $(@D) $$p \*.patch || exit 1 ; \
+		else \
+			$(APPLY_PATCHES) $(@D) `dirname $$p` `basename $$p` || exit 1; \
+		fi \
+	done
+endef
 
 LINUX_KERNEL_CUSTOM_LOGO_PATH = $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_LOGO_PATH))
 ifneq ($(LINUX_KERNEL_CUSTOM_LOGO_PATH),)
@@ -298,7 +298,11 @@ LINUX_PRE_BUILD_HOOKS += LINUX_KERNEL_CUSTOM_LOGO_CONVERT
 endif
 
 ifeq ($(BR2_LINUX_KERNEL_USE_DEFCONFIG),y)
+ifeq ($(BR2_TARGET_KERNEL_DRM_MA35_VERSION),y)
+LINUX_KCONFIG_DEFCONFIG = $(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG))_drm_defconfig
+else
 LINUX_KCONFIG_DEFCONFIG = $(call qstrip,$(BR2_LINUX_KERNEL_DEFCONFIG))_defconfig
+endif
 else ifeq ($(BR2_LINUX_KERNEL_USE_ARCH_DEFAULT_CONFIG),y)
 LINUX_KCONFIG_DEFCONFIG = defconfig
 else ifeq ($(BR2_LINUX_KERNEL_USE_CUSTOM_CONFIG),y)
@@ -472,6 +476,7 @@ endif
 # The call to disable gcc-plugins is a stop-gap measure:
 #   http://lists.busybox.net/pipermail/buildroot/2020-May/282727.html
 define LINUX_BUILD_CMDS
+	$(if $(BR2_TARGET_KERNEL_DRM_MA35_VERSION),`sed -i "s/ma35d1\.dtsi/ma35d1-drm\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`,`sed -i "s/ma35d1-drm\.dtsi/ma35d1\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`)
 	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35), \
 	$(call KCONFIG_ENABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED), \
 	$(call KCONFIG_DISABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED))

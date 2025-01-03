@@ -125,6 +125,12 @@ config BR2_TARGET_KERNEL_MA35_VERSION
 	  This option allows Buildroot to get the Linux kernel source
           code from a git repository.
 
+config BR2_TARGET_KERNEL_DRM_MA35_VERSION
+        bool "Enable DRM in the MA35 Series Kernel"
+        depends on BR2_LINUX_KERNEL_MA35
+        help
+          Kernel with DRM
+
 config BR2_LINUX_KERNEL_CUSTOM_VERSION_VALUE
 	string "Kernel version"
 	depends on BR2_LINUX_KERNEL_CUSTOM_VERSION
