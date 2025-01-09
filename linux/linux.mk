@@ -476,7 +476,7 @@ endif
 # The call to disable gcc-plugins is a stop-gap measure:
 #   http://lists.busybox.net/pipermail/buildroot/2020-May/282727.html
 define LINUX_BUILD_CMDS
-	$(if $(BR2_TARGET_KERNEL_DRM_MA35_VERSION),`sed -i "s/ma35d1\.dtsi/ma35d1-drm\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`,`sed -i "s/ma35d1-drm\.dtsi/ma35d1\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`)
+	$(if $(BR2_NUVOTON_MA35D1), $(if $(BR2_TARGET_KERNEL_DRM_MA35_VERSION),`sed -i "s/ma35d1\.dtsi/ma35d1-drm\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`,`sed -i "s/ma35d1-drm\.dtsi/ma35d1\.dtsi/" $(LINUX_ARCH_PATH)/boot/dts/$(addsuffix .dts,$(LINUX_DTS_NAME))`))
 	$(if $(BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_A35), \
 	$(call KCONFIG_ENABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED), \
 	$(call KCONFIG_DISABLE_OPT,CONFIG_COMMON_CLK_FIXED_UNUSED))
