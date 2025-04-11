@@ -372,11 +372,6 @@ uboot_cmd() {
 		sed -i "s/boot_targets=/boot_targets=spinor0 /1" ${BINARIES_DIR}/uboot-env.txt
 	fi
 
-	if echo ${MACHINE} | grep -q "iot"
-	then
-		sed -i "s/mmc_block=mmcblk1p1/mmc_block=mmcblk0p1/1" ${BINARIES_DIR}/uboot-env.txt
-	fi
-
 	${HOST_DIR}/bin/mkenvimage ${ENVOPT} -o ${BINARIES_DIR}/uboot-env.bin ${BINARIES_DIR}/uboot-env.txt
 }
 
