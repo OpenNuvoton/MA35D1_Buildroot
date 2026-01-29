@@ -31,6 +31,9 @@ else ifeq ($(BR2_NUVOTON_MA35H0),y)
 MA35=ma35h0
 endif
 
+define LINUX_RT_APPLY_PATCHES
+	$(if $(BR2_LINUX_KERNEL_MA35_5_10_RT_VERSION),$(APPLY_PATCHES) $(LINUX_DIR) $(TOPDIR)/linux/5.10.140-rt)
+endef
 
 # Compute LINUX_SOURCE and LINUX_SITE from the configuration
 ifeq ($(BR2_LINUX_KERNEL_CUSTOM_TARBALL),y)
@@ -38,6 +41,10 @@ LINUX_TARBALL = $(call qstrip,$(BR2_LINUX_KERNEL_CUSTOM_TARBALL_LOCATION))
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
 else ifeq ($(BR2_LINUX_KERNEL_MA35_5_10_VERSION),y)
+LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.10.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-5.10.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
+LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
+LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
+else ifeq ($(BR2_LINUX_KERNEL_MA35_5_10_RT_VERSION),y)
 LINUX_TARBALL = $(call github,OpenNuvoton,MA35D1_linux-5.10.y,$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)))/MA35D1_linux-5.10.y-$(call qstrip,$(BR2_TARGET_KERNEL_MA35_VERSION)).tar.gz
 LINUX_SITE = $(patsubst %/,%,$(dir $(LINUX_TARBALL)))
 LINUX_SOURCE = $(notdir $(LINUX_TARBALL))
@@ -241,6 +248,8 @@ LINUX_KERNEL_UIMAGE_LOADADDR = $(call qstrip,$(BR2_LINUX_KERNEL_UIMAGE_LOADADDR)
 ifneq ($(LINUX_KERNEL_UIMAGE_LOADADDR),)
 LINUX_MAKE_FLAGS += LOADADDR="$(LINUX_KERNEL_UIMAGE_LOADADDR)"
 endif
+
+LINUX_POST_PATCH_HOOKS += LINUX_RT_APPLY_PATCHES
 
 # Compute the arch path, since i386 and x86_64 are in arch/x86 and not
 # in arch/$(KERNEL_ARCH). Even if the kernel creates symbolic links
