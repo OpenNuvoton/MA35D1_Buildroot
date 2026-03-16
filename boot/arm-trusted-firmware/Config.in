@@ -61,7 +61,7 @@ config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SHMEM_BASE
 	  Please ensure the base address matches the remote CPU.
 config BR2_TARGET_ARM_TRUSTED_FIRMWARE_LOAD_SHMEM_SIZE
 	string "Size of shared memory for AMP"
-	default "0x8800"
+	default "0x9000"
 	help
 	  Please ensure the size matches the remote CPU.
 endif
