@@ -309,8 +309,8 @@ IMAGE_CMD_sdcard()
 		# 0x30000
 		dd if=${BINARIES_DIR}/bl2.bin of=${SDCARD} conv=notrunc seek=384 bs=512 &>${NULLDEV}
 	fi
-        # 0x40000
-        dd if=${BINARIES_DIR}/uboot-env.bin-sdcard of=${SDCARD} conv=notrunc seek=512 bs=512 &>${NULLDEV}
+        # 0x50000
+        dd if=${BINARIES_DIR}/uboot-env.bin-sdcard of=${SDCARD} conv=notrunc seek=640 bs=512 &>${NULLDEV}
         # 0xC0000
         dd if=${BINARIES_DIR}/fip.bin-sdcard of=${SDCARD} conv=notrunc seek=1536 bs=512 &>${NULLDEV}
         # 0x2c0000
