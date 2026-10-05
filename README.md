@@ -1,3 +1,18 @@
+# ⚠️ IMPORTANT: Buildroot Version Recommendation
+
+> **For new projects and new users, Nuvoton strongly recommends using Buildroot 2024.02 instead of this Buildroot 2021 repository.**
+>
+> **Buildroot 2024.02 (recommended):**
+> https://github.com/OpenNuvoton/buildroot_2024
+>
+> Nuvoton's ongoing Buildroot development and maintenance efforts are focused on the Buildroot 2024.02 based repository.
+>
+> This Buildroot 2021 repository is retained primarily for existing projects and users that need to remain on this version. If an existing Buildroot 2021 based project cannot migrate due to project-specific requirements, Nuvoton will continue to provide necessary support and fixes for reported issues.
+>
+> **If you are starting a new project or are not already using Buildroot 2021, please use Buildroot 2024.02.**
+
+---
+
 Buildroot is a simple, efficient and easy-to-use tool to generate embedded
 Linux systems through cross-compilation.
 
@@ -6,7 +21,6 @@ document with 'make manual-text' and read output/docs/manual/manual.text.
 Online documentation can be found at http://buildroot.org/docs.html
 
 To build and use the buildroot stuff, do the following:
-
 1) run 'make menuconfig'
 2) select the target architecture and the packages you wish to compile
 3) run 'make'
@@ -17,12 +31,10 @@ You do not need to be root to build or run buildroot.  Have fun!
 
 Buildroot comes with a basic configuration for a number of boards. Run
 'make list-defconfigs' to view the list of provided configurations.
-
 # NUVOTON MA35 SERIES RELATED DESCRIPTION:
 ============================================
 
 The following boards were test in this release:
-
         - numaker_hmi_ma35d16aj2_defconfig
         - numaker_hmi_ma35h04f70_defconfig
         - numaker_iot_ma35d03f80_defconfig
@@ -42,7 +54,6 @@ The following boards were test in this release:
         - numaker_som_ma35d16aa1a_defconfig
         - numaker_som_ma35d16aa1_defconfig
         - numaker_som_ma35d16ab1a_defconfig
-
 Device tree of arm-trusted-firmware need to set cpu speed, DDR type and psci
 according to the board. do the following:
 1) run 'make numaker_som_ma35d16a81_defconfig'
@@ -57,7 +68,6 @@ The currently provided device tree are as follows:
 	- ma35d0-cpu650-custom-ddr
 	- ma35h0-cpu650-wb-128m
 	- ma35h0-cpu650-custom-ddr
-
 Device tree of Kernel need to set DDR size
 according to the board. do the following:
 1) run 'make numaker_som_ma35d16a81_defconfig'
@@ -69,10 +79,8 @@ The currently provided device tree are as follows:
 	- nuvoton/ma35d1-som-256m
 	- nuvoton/ma35d1-som-512m
 	- nuvoton/ma35d1-som-1g
-
 After the complilatiobn is complete, you can get the complete image in
 "output/images" folder
-
 SD card image provides the full system to boot with TFA, u-Boot, Kernel and file system,
 do the following:
 1) run 'make nuvoton_ma35d1_som_defconfig'
@@ -84,12 +92,10 @@ do the following:
 6) wait while it compiles
 7) find pack-core-image-buildroot-ma35d1-som-sdcard.bin and
         core-image-buildroot-ma35d1-som.rootfs.sdcard in output/images
-
 Run the following command to write SD card image.
 Change sdx below to match the one used by the SD card.
 
 sudo dd if=core-image-buildroot-ma35d1-som.rootfs.sdcard of=/dev/sdx conv=fsync
-
 SPINAND image provides the full system to boot with TFA, u-Boot, Kernel and file system,
 do the following:
 1) run 'make numaker_som_ma35d16a81_defconfig'
@@ -100,7 +106,6 @@ do the following:
 5) run 'make'
 6) wait while it compiles
 7) find pack-core-image-buildroot-ma35d1-som-spinand.bin in output/images
-
 NAND image provides the full system to boot with TFA, u-Boot, Kernel and file system,
 do the following:
 1) run 'make numaker_som_ma35d16a81_defconfig'
@@ -111,7 +116,6 @@ do the following:
 5) run 'make'
 6) wait while it compiles
 7) find pack-core-image-buildroot-ma35d1-som-nand.bin in output/images
-
 NOTE: pack-core-image-buildroot-#####.bin can be used by the MA35D1 nuwriter tool
 ============================================
 
@@ -121,8 +125,6 @@ You can also find us on #buildroot on OFTC IRC.
 
 If you would like to contribute patches, please read
 https://buildroot.org/manual.html#submitting-patches
-
-
 # NUVOTON NUC980 SERIES RELATED DESCRIPTION:
 ============================================
 
@@ -133,13 +135,11 @@ The following boards were test in this release:
 	- nuvoton_nuc980_chili_defconfig
 	- nuvoton_nuc980_eth2uart_defconfig
 	- nuvoton_nuc980_lorag_defconfig
-
 1) For example, run 'make nuvoton_nuc980_iot_defconfig'
 2) select the target architecture and the packages you wish to compile
 3) run 'make'
 4) wait while it compiles
 5) find the kernel, dtb, bootloader, root filesystem, etc. in output/images
-
 # NUVOTON N9H30 SERIES RELATED DESCRIPTION:
 ============================================
 
@@ -152,11 +152,8 @@ The following boards were tested in this release:
 2) run 'make'
 3) wait while it compiles
 4) find the kernel, dtb, bootloader, root filesystem, etc. in output/images
-
 These configurations provide example setups for N9H30 platforms,
 including graphics (emWin) and Matter protocol support.
-
-
 # NUVOTON NUC970 SERIES RELATED DESCRIPTION:
 ============================================
 
@@ -173,6 +170,5 @@ This configuration provides a basic setup for the NUC970 series platform.
 
 
 You do not need to be root to build or run buildroot.  Have fun!
-
 If users need to modiy buildroot parameters, user can run 'make menuconfig'
 to modify buildroot parameters.
