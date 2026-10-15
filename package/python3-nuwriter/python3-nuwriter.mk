@@ -17,7 +17,7 @@ HOST_PYTHON3_NUWRITER_DEPENDENCIES = \
 
 define HOST_PYTHON3_NUWRITER_BUILD_CMDS
 	(cd $(@D); \
-		$(HOST_DIR)/bin/pip3 install wheel crcmod pyusb usb crypto ecdsa tqdm pycryptodome \
+		$(HOST_DIR)/bin/pip3 install wheel crcmod pyusb usb crypto ecdsa tqdm pycryptodome python-pkcs11 \
 	)
 endef
 
